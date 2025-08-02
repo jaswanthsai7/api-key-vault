@@ -11,11 +11,13 @@ namespace APIVault.API.Services
     {
         private readonly AppDbContext _context;
         private readonly JwtHelper _jwtHelper;
+        private readonly EncryptionHelper _encryptionHelper;
 
-        public AuthService(AppDbContext context, JwtHelper jwtHelper)
+        public AuthService(AppDbContext context, JwtHelper jwtHelper, EncryptionHelper encryptionHelper)
         {
             _context = context;
             _jwtHelper = jwtHelper;
+            _encryptionHelper = encryptionHelper;
         }
 
         public async Task<string> LoginAsync(LoginRequest request)
@@ -24,11 +26,21 @@ namespace APIVault.API.Services
                 .Include(u => u.Role)
                 .FirstOrDefaultAsync(u => u.Email == request.Email);
 
-            if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+            if (user == null)
+                throw new Exception("Invalid email or password.");
+
+            // Decrypt the encrypted password received from frontend
+            string decryptedPassword = _encryptionHelper.Decrypt(request.Password);
+
+            // Verify decrypted password against stored hash
+            bool isPasswordValid = BCrypt.Net.BCrypt.Verify(decryptedPassword, user.PasswordHash);
+
+            if (!isPasswordValid)
                 throw new Exception("Invalid email or password.");
 
             return _jwtHelper.GenerateAccessToken(user);
         }
+
 
         public async Task<User> RegisterAsync(RegisterRequest request)
         {
@@ -36,7 +48,11 @@ namespace APIVault.API.Services
             if (existingUser != null)
                 throw new Exception("User already exists with this email.");
 
-            var hashedPassword = BCrypt.Net.BCrypt.HashPassword(request.Password);
+            // Decrypt password first
+            string decryptedPassword = _encryptionHelper.Decrypt(request.Password);
+
+            // Hash decrypted password
+            var hashedPassword = BCrypt.Net.BCrypt.HashPassword(decryptedPassword);
 
             var role = await _context.Roles.FindAsync(request.RoleId);
             var group = await _context.Groups.FindAsync(request.GroupId);
@@ -57,5 +73,6 @@ namespace APIVault.API.Services
 
             return newUser;
         }
+
     }
 }
