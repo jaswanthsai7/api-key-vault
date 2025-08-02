@@ -9,65 +9,66 @@ namespace APIVault.API.Services
     public class ApiKeyService : IApiKeyService
     {
         private readonly AppDbContext _context;
-        private readonly IConfiguration _config;
 
-        public ApiKeyService(AppDbContext context,IConfiguration config)
+        public ApiKeyService(AppDbContext context)
         {
             _context = context;
-            _config = config;
         }
 
         public async Task<string> GenerateApiKeyAsync(Guid userId)
         {
+            // 1. Get user with role and group info
             var user = await _context.Users
-                .Include(u => u.Group)
                 .Include(u => u.Role)
+                .Include(u => u.Group)
                 .FirstOrDefaultAsync(u => u.Id == userId);
 
             if (user == null)
                 throw new Exception("User not found.");
 
-            // 1. Get allowed API scopes based on user's group
+            // 2. Get allowed API scopes via group
             var allowedScopeIds = await _context.GroupApiScopes
                 .Where(gas => gas.GroupId == user.GroupId)
                 .Select(gas => gas.ApiScopeId)
                 .ToListAsync();
 
             var allowedScopes = await _context.ApiScopes
-                .Where(scope => allowedScopeIds.Contains(scope.Id))
+                .Where(s => allowedScopeIds.Contains(s.Id))
                 .ToListAsync();
 
             if (!allowedScopes.Any())
                 throw new Exception("No API scopes assigned to this user’s group.");
 
-            // 2. Generate the API key string
-            string apiKeyString = ApiKeyGenerator.Generate();
+            // 3. Generate API key
+            string generatedKey = ApiKeyGenerator.Generate();
 
-            // 3. Create new ApiKey
             var newApiKey = new ApiKey
             {
-                Key = apiKeyString,
-                UserId = user.Id,
-                ExpiresAt = DateTime.UtcNow.AddDays(_config.GetValue<int>("ApiKey:LifetimeDays")),
-                CreatedAt = DateTime.UtcNow
+                Key = generatedKey,
+                UserId = userId,
+                CreatedAt = DateTime.UtcNow,
+                ExpiresAt = DateTime.UtcNow.AddDays(30), // Optional: 30-day expiration
+                IsRevoked = false
             };
 
             _context.ApiKeys.Add(newApiKey);
             await _context.SaveChangesAsync();
 
-            // 4. Link this API key to the allowed scopes
+            // 4. Add mapping to allowed scopes
             foreach (var scope in allowedScopes)
             {
-                _context.ApiKeyScopes.Add(new ApiKeyScope
+                var keyScope = new ApiKeyScope
                 {
                     ApiKeyId = newApiKey.Id,
                     ApiScopeId = scope.Id
-                });
+                };
+
+                _context.ApiKeyScopes.Add(keyScope);
             }
 
             await _context.SaveChangesAsync();
 
-            return apiKeyString;
+            return generatedKey;
         }
     }
 }

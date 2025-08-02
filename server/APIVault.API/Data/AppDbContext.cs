@@ -6,9 +6,7 @@ namespace APIVault.API.Data
     public class AppDbContext : DbContext
     {
         public AppDbContext(DbContextOptions<AppDbContext> options)
-            : base(options)
-        {
-        }
+            : base(options) { }
 
         public DbSet<User> Users { get; set; }
         public DbSet<Role> Roles { get; set; }
@@ -22,15 +20,45 @@ namespace APIVault.API.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // Composite key for ApiKeyScope
+            // ===== User Config =====
+            modelBuilder.Entity<User>()
+                .HasIndex(u => u.Email)
+                .IsUnique();
+
+            modelBuilder.Entity<User>()
+                .Property(u => u.Email)
+                .IsRequired()
+                .HasMaxLength(100);
+
+            modelBuilder.Entity<User>()
+                .Property(u => u.PasswordHash)
+                .IsRequired();
+
+            modelBuilder.Entity<User>()
+                .Property(u => u.CreatedAt)
+                .HasDefaultValueSql("GETUTCDATE()");
+
+            // ===== ApiKey Config =====
+            modelBuilder.Entity<ApiKey>()
+                .Property(a => a.Key)
+                .IsRequired();
+
+            modelBuilder.Entity<ApiKey>()
+                .Property(a => a.CreatedAt)
+                .HasDefaultValueSql("GETUTCDATE()");
+
+            modelBuilder.Entity<ApiKey>()
+                .Property(a => a.IsRevoked)
+                .HasDefaultValue(false);
+
+            modelBuilder.Entity<ApiKey>()
+                .Property(a => a.ExpiresAt)
+                .IsRequired(false);
+
+            // ===== ApiKeyScope: Composite Key =====
             modelBuilder.Entity<ApiKeyScope>()
                 .HasKey(aks => new { aks.ApiKeyId, aks.ApiScopeId });
 
-            // Composite key for GroupApiScope
-            modelBuilder.Entity<GroupApiScope>()
-                .HasKey(gas => new { gas.GroupId, gas.ApiScopeId });
-
-            // Relationships (optional but recommended)
             modelBuilder.Entity<ApiKeyScope>()
                 .HasOne(aks => aks.ApiKey)
                 .WithMany(k => k.ApiKeyScopes)
@@ -41,6 +69,10 @@ namespace APIVault.API.Data
                 .WithMany(s => s.ApiKeyScopes)
                 .HasForeignKey(aks => aks.ApiScopeId);
 
+            // ===== GroupApiScope: Composite Key =====
+            modelBuilder.Entity<GroupApiScope>()
+                .HasKey(gas => new { gas.GroupId, gas.ApiScopeId });
+
             modelBuilder.Entity<GroupApiScope>()
                 .HasOne(gas => gas.Group)
                 .WithMany(g => g.GroupApiScopes)
@@ -50,6 +82,28 @@ namespace APIVault.API.Data
                 .HasOne(gas => gas.ApiScope)
                 .WithMany(s => s.GroupApiScopes)
                 .HasForeignKey(gas => gas.ApiScopeId);
+
+            // ===== ApiScope Config =====
+            modelBuilder.Entity<ApiScope>()
+                .Property(a => a.Name)
+                .IsRequired()
+                .HasMaxLength(100);
+
+            modelBuilder.Entity<ApiScope>()
+                .Property(a => a.Description)
+                .HasMaxLength(255);
+
+            // ===== Role Config =====
+            modelBuilder.Entity<Role>()
+                .Property(r => r.Name)
+                .IsRequired()
+                .HasMaxLength(50);
+
+            // ===== Group Config =====
+            modelBuilder.Entity<Group>()
+                .Property(g => g.Name)
+                .IsRequired()
+                .HasMaxLength(50);
         }
     }
 }

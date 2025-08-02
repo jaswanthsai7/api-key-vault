@@ -25,10 +25,9 @@ namespace APIVault.API.Controllers
             {
                 var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
                 if (userIdClaim == null)
-                    return Unauthorized(new ErrorResponse("User not authenticated."));
+                    return Unauthorized(new { message = "User not authenticated." });
 
                 var userId = Guid.Parse(userIdClaim.Value);
-
                 var apiKey = await _apiKeyService.GenerateApiKeyAsync(userId);
 
                 return Ok(new { apiKey });
