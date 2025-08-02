@@ -1,11 +1,8 @@
-using System;
-using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using APIVault.API.Models;
-using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 
 namespace APIVault.API.Helpers
@@ -60,7 +57,7 @@ namespace APIVault.API.Helpers
                 ValidAudience = _config["Jwt:Audience"],
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"])),
-                ValidateLifetime = false // Allow expired token
+                ValidateLifetime = false
             };
 
             var tokenHandler = new JwtSecurityTokenHandler();

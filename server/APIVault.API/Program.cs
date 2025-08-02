@@ -1,4 +1,7 @@
 ﻿using APIVault.API.Data;
+using APIVault.API.Helpers;
+using APIVault.API.Services;
+using APIVault.API.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,8 +13,12 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 //  Enable CORS
 builder.Services.AddCors();
 
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<JwtHelper>();
+
 //  Add controllers
 builder.Services.AddControllers();
+
 
 //  Add OpenAPI/Swagger
 builder.Services.AddEndpointsApiExplorer();

@@ -1,3 +1,4 @@
+
 namespace APIVault.API.Models
 {
     public class User
@@ -13,5 +14,6 @@ namespace APIVault.API.Models
         public Group Group { get; set; }
 
         public ICollection<ApiKey> ApiKeys { get; set; }
+        public DateTime CreatedAt { get; internal set; }
     }
 }
