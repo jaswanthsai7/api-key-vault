@@ -1,9 +1,12 @@
+using System;
+using System.Collections.Generic;
+
 namespace APIVault.API.Models
 {
     public class Group
     {
-        public int Id { get; set; }
-        public string Name { get; set; } = string.Empty;
+        public Guid Id { get; set; } = Guid.NewGuid();
+        public string Name { get; set; }
 
         public ICollection<User> Users { get; set; }
         public ICollection<GroupApiScope> GroupApiScopes { get; set; }

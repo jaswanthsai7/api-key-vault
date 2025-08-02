@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace APIVault.API.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class Init : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -15,10 +15,10 @@ namespace APIVault.API.Migrations
                 name: "ApiScopes",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Endpoint = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    Route = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -29,8 +29,7 @@ namespace APIVault.API.Migrations
                 name: "Groups",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
@@ -42,8 +41,7 @@ namespace APIVault.API.Migrations
                 name: "Roles",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
@@ -55,14 +53,12 @@ namespace APIVault.API.Migrations
                 name: "GroupApiScopes",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    GroupId = table.Column<int>(type: "int", nullable: false),
-                    ApiScopeId = table.Column<int>(type: "int", nullable: false)
+                    GroupId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ApiScopeId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_GroupApiScopes", x => x.Id);
+                    table.PrimaryKey("PK_GroupApiScopes", x => new { x.GroupId, x.ApiScopeId });
                     table.ForeignKey(
                         name: "FK_GroupApiScopes_ApiScopes_ApiScopeId",
                         column: x => x.ApiScopeId,
@@ -81,12 +77,12 @@ namespace APIVault.API.Migrations
                 name: "Users",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     PasswordHash = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    RoleId = table.Column<int>(type: "int", nullable: false),
-                    GroupId = table.Column<int>(type: "int", nullable: false)
+                    RoleId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    GroupId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -109,12 +105,12 @@ namespace APIVault.API.Migrations
                 name: "ApiKeys",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Key = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    ExpiryDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    UserId = table.Column<int>(type: "int", nullable: false)
+                    ExpiresAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsRevoked = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -131,14 +127,12 @@ namespace APIVault.API.Migrations
                 name: "ApiKeyScopes",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    ApiKeyId = table.Column<int>(type: "int", nullable: false),
-                    ApiScopeId = table.Column<int>(type: "int", nullable: false)
+                    ApiKeyId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ApiScopeId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ApiKeyScopes", x => x.Id);
+                    table.PrimaryKey("PK_ApiKeyScopes", x => new { x.ApiKeyId, x.ApiScopeId });
                     table.ForeignKey(
                         name: "FK_ApiKeyScopes_ApiKeys_ApiKeyId",
                         column: x => x.ApiKeyId,
@@ -159,11 +153,6 @@ namespace APIVault.API.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ApiKeyScopes_ApiKeyId",
-                table: "ApiKeyScopes",
-                column: "ApiKeyId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_ApiKeyScopes_ApiScopeId",
                 table: "ApiKeyScopes",
                 column: "ApiScopeId");
@@ -172,11 +161,6 @@ namespace APIVault.API.Migrations
                 name: "IX_GroupApiScopes_ApiScopeId",
                 table: "GroupApiScopes",
                 column: "ApiScopeId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_GroupApiScopes_GroupId",
-                table: "GroupApiScopes",
-                column: "GroupId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Users_GroupId",

@@ -1,13 +1,13 @@
+using System;
+
 namespace APIVault.API.Models
 {
     public class GroupApiScope
     {
-        public int Id { get; set; }
-
-        public int GroupId { get; set; }
+        public Guid GroupId { get; set; }
         public Group Group { get; set; }
 
-        public int ApiScopeId { get; set; }
+        public Guid ApiScopeId { get; set; }
         public ApiScope ApiScope { get; set; }
     }
 }

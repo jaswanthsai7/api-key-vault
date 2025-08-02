@@ -9,10 +9,12 @@ namespace APIVault.API.Services
     public class ApiKeyService : IApiKeyService
     {
         private readonly AppDbContext _context;
+        private readonly IConfiguration _config;
 
-        public ApiKeyService(AppDbContext context)
+        public ApiKeyService(AppDbContext context,IConfiguration config)
         {
             _context = context;
+            _config = config;
         }
 
         public async Task<string> GenerateApiKeyAsync(Guid userId)
@@ -46,6 +48,7 @@ namespace APIVault.API.Services
             {
                 Key = apiKeyString,
                 UserId = user.Id,
+                ExpiresAt = DateTime.UtcNow.AddDays(_config.GetValue<int>("ApiKey:LifetimeDays")),
                 CreatedAt = DateTime.UtcNow
             };
 
