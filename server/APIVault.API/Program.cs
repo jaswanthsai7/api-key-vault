@@ -14,6 +14,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddCors();
 
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IApiKeyService, ApiKeyService>();
+builder.Services.AddScoped<EncryptionHelper>();
 builder.Services.AddScoped<JwtHelper>();
 
 //  Add controllers
