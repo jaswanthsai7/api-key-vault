@@ -1,73 +1,83 @@
 ﻿// File: Controllers/UserController.cs
-using System;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
+using APIVault.API.Data;
+using APIVault.API.DTOs.User;
 using APIVault.API.Models;
 using APIVault.API.Services.Interfaces;
+using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Threading.Tasks;
 
 namespace APIVault.API.Controllers.Admin
 {
+
     [ApiController]
     [Route("api/[controller]")]
     public class UserController : ControllerBase
     {
-        private readonly IUserService _userService;
+        private readonly IUserService _service;
 
-        public UserController(IUserService userService)
+        public UserController(IUserService service)
         {
-            _userService = userService;
+            _service = service;
         }
 
-        [HttpGet]
+        // GET: /api/user
+        [HttpGet("GetAllUsers")]
         public async Task<IActionResult> GetAll()
         {
-            var users = await _userService.GetAllUsersAsync();
+            var users = await _service.GetAllAsync();
             return Ok(users);
         }
 
-        [HttpGet("{id}")]
+        // GET: /api/user/{id}
+        [HttpGet("GetById")]
         public async Task<IActionResult> GetById(Guid id)
         {
-            var user = await _userService.GetUserByIdAsync(id);
-            if (user == null) return NotFound();
-            return Ok(user);
+            var user = await _service.GetByIdAsync(id);
+            return user == null ? NotFound() : Ok(user);
         }
 
-        [HttpPost]
-        public async Task<IActionResult> Create(User user)
+        // POST: /api/user
+        [HttpPost("CreateUser")]
+        public async Task<IActionResult> CreateUser([FromBody] CreateUserDto dto)
         {
-            var created = await _userService.CreateUserAsync(user);
+            var user = new User
+            {
+                Email = dto.Email,
+                PasswordHash = dto.PasswordHash,
+                RoleId = dto.RoleId,
+                GroupId = dto.GroupId,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            var created = await _service.CreateAsync(user);
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(Guid id, User user)
+        // PUT: /api/user/{id}
+        [HttpPut("UpdateUser")]
+        public async Task<IActionResult> UpdateUser(Guid id, [FromBody] UpdateUserDto dto)
         {
-            var updated = await _userService.UpdateUserAsync(id, user);
-            if (updated == null) return NotFound();
-            return Ok(updated);
+            var user = new User
+            {
+                Email = dto.Email,
+                PasswordHash = dto.PasswordHash,
+                RoleId = dto.RoleId,
+                GroupId = dto.GroupId
+            };
+
+            var updated = await _service.UpdateAsync(id, user);
+            return updated == null ? NotFound() : Ok(updated);
         }
 
-        [HttpDelete("{id}")]
+        // DELETE: /api/user/{id}
+        [HttpDelete("DeleteUser")]
         public async Task<IActionResult> Delete(Guid id)
         {
-            var deleted = await _userService.DeleteUserAsync(id);
-            if (!deleted) return NotFound();
-            return NoContent();
-        }
-
-        [HttpPost("{id}/assign-role/{roleId}")]
-        public async Task<IActionResult> AssignRole(Guid id, Guid roleId)
-        {
-            var result = await _userService.AssignRoleAsync(id, roleId);
-            return result ? Ok() : NotFound();
-        }
-
-        [HttpPost("{id}/assign-group/{groupId}")]
-        public async Task<IActionResult> AssignGroup(Guid id, Guid groupId)
-        {
-            var result = await _userService.AssignGroupAsync(id, groupId);
-            return result ? Ok() : NotFound();
+            var success = await _service.DeleteAsync(id);
+            return success ? NoContent() : NotFound();
         }
     }
+
+
 }

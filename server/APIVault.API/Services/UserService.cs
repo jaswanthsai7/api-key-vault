@@ -11,94 +11,79 @@ using System.Threading.Tasks;
 namespace APIVault.API.Services.Implementations
 {
 
-    [ApiController]
-    [Route("api/[controller]")]
-    public class UserController : ControllerBase
+    using Microsoft.EntityFrameworkCore;
+    using APIVault.API.Models;
+
+    public class UserService : IUserService
     {
         private readonly AppDbContext _context;
 
-        public UserController(AppDbContext context)
+        public UserService(AppDbContext context)
         {
             _context = context;
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IEnumerable<User>> GetAllAsync()
         {
-            var users = await _context.Users
+            return await _context.Users
                 .Include(u => u.Role)
                 .Include(u => u.Group)
                     .ThenInclude(g => g.GroupApiScopes)
-                        .ThenInclude(gs => gs.ApiScope)
+                        .ThenInclude(gas => gas.ApiScope)
                 .Include(u => u.ApiKeys)
                     .ThenInclude(k => k.ApiKeyScopes)
-                        .ThenInclude(s => s.ApiScope)
+                        .ThenInclude(ks => ks.ApiScope)
                 .ToListAsync();
-
-            return Ok(users);
         }
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> Get(Guid id)
+        public async Task<User> GetByIdAsync(Guid id)
         {
-            var user = await _context.Users
+            return await _context.Users
                 .Include(u => u.Role)
                 .Include(u => u.Group)
                     .ThenInclude(g => g.GroupApiScopes)
-                        .ThenInclude(gs => gs.ApiScope)
+                        .ThenInclude(gas => gas.ApiScope)
                 .Include(u => u.ApiKeys)
                     .ThenInclude(k => k.ApiKeyScopes)
-                        .ThenInclude(s => s.ApiScope)
+                        .ThenInclude(ks => ks.ApiScope)
                 .FirstOrDefaultAsync(u => u.Id == id);
-
-            return user == null ? NotFound() : Ok(user);
         }
 
-        [HttpPost]
-        public async Task<IActionResult> Create([FromBody] CreateUserDto dto)
+        public async Task<User> CreateAsync(User user)
         {
-            var user = new User
-            {
-                Id = Guid.NewGuid(),
-                Email = dto.Email,
-                PasswordHash = dto.PasswordHash,
-                RoleId = dto.RoleId,
-                GroupId = dto.GroupId,
-                CreatedAt = DateTime.UtcNow
-            };
+            user.Id = Guid.NewGuid();
+            user.CreatedAt = DateTime.UtcNow;
 
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
-
-            return CreatedAtAction(nameof(Get), new { id = user.Id }, user);
+            return user;
         }
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(Guid id, [FromBody] UpdateUserDto dto)
+        public async Task<User> UpdateAsync(Guid id, User updatedUser)
         {
             var user = await _context.Users.FindAsync(id);
-            if (user == null) return NotFound();
+            if (user == null) return null;
 
-            user.Email = dto.Email;
-            user.PasswordHash = dto.PasswordHash;
-            user.RoleId = dto.RoleId;
-            user.GroupId = dto.GroupId;
+            user.Email = updatedUser.Email;
+            user.PasswordHash = updatedUser.PasswordHash;
+            user.RoleId = updatedUser.RoleId;
+            user.GroupId = updatedUser.GroupId;
 
             await _context.SaveChangesAsync();
-            return Ok(user);
+            return user;
         }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(Guid id)
+        public async Task<bool> DeleteAsync(Guid id)
         {
             var user = await _context.Users.FindAsync(id);
-            if (user == null) return NotFound();
+            if (user == null) return false;
 
             _context.Users.Remove(user);
             await _context.SaveChangesAsync();
-            return NoContent();
+            return true;
         }
     }
+
 
 
 }
