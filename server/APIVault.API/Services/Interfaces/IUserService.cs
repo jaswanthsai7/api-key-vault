@@ -11,10 +11,7 @@ namespace APIVault.API.Services.Interfaces
         Task<IEnumerable<User>> GetAllUsersAsync();
         Task<User> GetUserByIdAsync(Guid id);
         Task<User> CreateUserAsync(User user);
-        Task<User> UpdateUserAsync(Guid id, User user);
+        Task<User> UpdateUserAsync(Guid id, User updatedUser);
         Task<bool> DeleteUserAsync(Guid id);
-
-        Task<bool> AssignRoleAsync(Guid userId, Guid roleId);
-        Task<bool> AssignGroupAsync(Guid userId, Guid groupId);
     }
 }

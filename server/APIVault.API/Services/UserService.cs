@@ -1,91 +1,104 @@
 ﻿// File: Services/Implementations/UserService.cs
+using APIVault.API.Data;
+using APIVault.API.Models;
+using APIVault.API.Services.Interfaces;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
-using APIVault.API.Models;
-using APIVault.API.Services.Interfaces;
-using APIVault.API.Data;
 
 namespace APIVault.API.Services.Implementations
 {
-    public class UserService : IUserService
+
+    [ApiController]
+    [Route("api/[controller]")]
+    public class UserController : ControllerBase
     {
         private readonly AppDbContext _context;
 
-        public UserService(AppDbContext context)
+        public UserController(AppDbContext context)
         {
             _context = context;
         }
 
-        public async Task<IEnumerable<User>> GetAllUsersAsync()
+        [HttpGet]
+        public async Task<IActionResult> GetAll()
         {
-            return await _context.Users
+            var users = await _context.Users
                 .Include(u => u.Role)
                 .Include(u => u.Group)
+                    .ThenInclude(g => g.GroupApiScopes)
+                        .ThenInclude(gs => gs.ApiScope)
                 .Include(u => u.ApiKeys)
+                    .ThenInclude(k => k.ApiKeyScopes)
+                        .ThenInclude(s => s.ApiScope)
                 .ToListAsync();
+
+            return Ok(users);
         }
 
-        public async Task<User> GetUserByIdAsync(Guid id)
+        [HttpGet("{id}")]
+        public async Task<IActionResult> Get(Guid id)
         {
-            return await _context.Users
+            var user = await _context.Users
                 .Include(u => u.Role)
                 .Include(u => u.Group)
+                    .ThenInclude(g => g.GroupApiScopes)
+                        .ThenInclude(gs => gs.ApiScope)
                 .Include(u => u.ApiKeys)
+                    .ThenInclude(k => k.ApiKeyScopes)
+                        .ThenInclude(s => s.ApiScope)
                 .FirstOrDefaultAsync(u => u.Id == id);
+
+            return user == null ? NotFound() : Ok(user);
         }
 
-        public async Task<User> CreateUserAsync(User user)
+        [HttpPost]
+        public async Task<IActionResult> Create([FromBody] CreateUserDto dto)
         {
-            user.Id = Guid.NewGuid();
-            user.CreatedAt = DateTime.UtcNow;
+            var user = new User
+            {
+                Id = Guid.NewGuid(),
+                Email = dto.Email,
+                PasswordHash = dto.PasswordHash,
+                RoleId = dto.RoleId,
+                GroupId = dto.GroupId,
+                CreatedAt = DateTime.UtcNow
+            };
+
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
-            return user;
+
+            return CreatedAtAction(nameof(Get), new { id = user.Id }, user);
         }
 
-        public async Task<User> UpdateUserAsync(Guid id, User updatedUser)
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(Guid id, [FromBody] UpdateUserDto dto)
         {
             var user = await _context.Users.FindAsync(id);
-            if (user == null) return null;
+            if (user == null) return NotFound();
 
-            user.Email = updatedUser.Email;
-            user.PasswordHash = updatedUser.PasswordHash;
+            user.Email = dto.Email;
+            user.PasswordHash = dto.PasswordHash;
+            user.RoleId = dto.RoleId;
+            user.GroupId = dto.GroupId;
+
             await _context.SaveChangesAsync();
-            return user;
+            return Ok(user);
         }
 
-        public async Task<bool> DeleteUserAsync(Guid id)
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(Guid id)
         {
             var user = await _context.Users.FindAsync(id);
-            if (user == null) return false;
+            if (user == null) return NotFound();
 
             _context.Users.Remove(user);
             await _context.SaveChangesAsync();
-            return true;
-        }
-
-        public async Task<bool> AssignRoleAsync(Guid userId, Guid roleId)
-        {
-            var user = await _context.Users.FindAsync(userId);
-            var role = await _context.Roles.FindAsync(roleId);
-            if (user == null || role == null) return false;
-
-            user.RoleId = roleId;
-            await _context.SaveChangesAsync();
-            return true;
-        }
-
-        public async Task<bool> AssignGroupAsync(Guid userId, Guid groupId)
-        {
-            var user = await _context.Users.FindAsync(userId);
-            var group = await _context.Groups.FindAsync(groupId);
-            if (user == null || group == null) return false;
-
-            user.GroupId = groupId;
-            await _context.SaveChangesAsync();
-            return true;
+            return NoContent();
         }
     }
+
+
 }
