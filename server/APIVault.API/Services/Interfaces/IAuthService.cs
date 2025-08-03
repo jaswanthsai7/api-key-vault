@@ -6,6 +6,6 @@ namespace APIVault.API.Services.Interfaces
     public interface IAuthService
     {
         Task<User> RegisterAsync(RegisterRequest request);
-        Task<string> LoginAsync(LoginRequest request); 
+        Task<LoginResponse> LoginAsync(LoginRequest request); 
     }
 }

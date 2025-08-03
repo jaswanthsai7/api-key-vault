@@ -12,29 +12,37 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
+  
   const router = useRouter();
-const { login } = useAuth();
+  const { login } = useAuth();
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  try {
-    const encryptedPassword = encryptPassword(password);
-    const token = await loginUser({
-      email,
-      password: encryptedPassword,
-    });
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const encryptedPassword = encryptPassword(password);
+      const token = await loginUser({
+        email,
+        password: encryptedPassword,
+      });
+      
+      localStorage.setItem("token", token.accessToken);
+      const isAdmin = token?.role?.toLowerCase() =="admin" ?  true : false;
+      login(token.accessToken,isAdmin); //  context
+      if (isAdmin) {
 
-    localStorage.setItem("token", token.accessToken);
-    login(token.accessToken); // ⬅️ context
-    router.push("/dashboard");
-  } catch (error) {
-    const msg =
-      error?.response?.data?.message ||
-      error?.message ||
-      "Login failed. Try again.";
-    setErrorMsg(msg);
-  }
-};
+        router.push("/admin");
+      }else{
+
+        router.push("/dashboard");
+      }
+    } catch (error) {
+      const msg =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Login failed. Try again.";
+      setErrorMsg(msg);
+    }
+  };
 
 
   return (

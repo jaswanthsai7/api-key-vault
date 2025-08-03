@@ -20,7 +20,7 @@ namespace APIVault.API.Services
             _encryptionHelper = encryptionHelper;
         }
 
-        public async Task<string> LoginAsync(LoginRequest request)
+        public async Task<LoginResponse> LoginAsync(LoginRequest request)
         {
             var user = await _context.Users
                 .Include(u => u.Role)
@@ -29,18 +29,22 @@ namespace APIVault.API.Services
             if (user == null)
                 throw new Exception("Invalid email or password.");
 
-            // Decrypt password from frontend (AES or similar)
             string decryptedPassword = _encryptionHelper.Decrypt(request.Password);
-
-            // Verify against hashed password in DB (BCrypt)
             bool isPasswordValid = BCrypt.Net.BCrypt.Verify(decryptedPassword, user.PasswordHash);
 
             if (!isPasswordValid)
                 throw new Exception("Invalid email or password.");
 
-            // Generate JWT if valid
-            return _jwtHelper.GenerateAccessToken(user);
+            // Generate token
+            string token = _jwtHelper.GenerateAccessToken(user);
+
+            return new LoginResponse
+            {
+                AccessToken = token,
+                Role = user.Role?.Name ?? "Unknown"
+            };
         }
+
 
 
 

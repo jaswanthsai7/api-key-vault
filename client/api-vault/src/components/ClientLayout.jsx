@@ -6,7 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 import DashboardSidebar from "./DashboardSidebar";
 
 export default function ClientLayout({ children }) {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, isAdmin } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -14,7 +14,6 @@ export default function ClientLayout({ children }) {
   const publicRoutes = ["/", "/login", "/register"];
   const showSidebar = !noSidebarRoutes.includes(pathname);
   const isPublic = publicRoutes.includes(pathname);
-
   useEffect(() => {
     if (loading) return; // Wait for auth loading to finish
 
@@ -33,10 +32,11 @@ export default function ClientLayout({ children }) {
       </div>
     );
   }
+console.log(isAdmin);
 
   return (
     <div className="pt-14">
-      {showSidebar && <DashboardSidebar />}
+      {showSidebar && <DashboardSidebar/>}
       <div className={showSidebar ? "md:ml-64 p-4" : "p-4"}>{children}</div>
     </div>
   );

@@ -4,38 +4,39 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
-export default function DashboardSidebar({ isAdmin = false }) {
+export default function DashboardSidebar() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-
+  const { isAdmin } = useAuth();
   useEffect(() => {
     setOpen(false);
   }, [pathname]);
 
   const navItems = isAdmin
     ? [
-        { href: "/admin", label: "Admin Home" },
-        { href: "/admin/users", label: "Users" },
-        { href: "/admin/audit", label: "Audit Logs" },
-      ]
+      { href: "/admin", label: "Admin Home" },
+      { href: "/admin/users", label: "Users" },
+      { href: "/admin/audit", label: "Audit Logs" },
+    ]
     : [
-        { href: "/dashboard", label: "Overview" },
-        { href: "/dashboard/keys", label: "API Keys" },
-        { href: "/dashboard/usage", label: "Usage & Logs" },
-        // { href: "/dashboard/account", label: "Account Settings" },
-        { href: "/dashboard/testApi", label: "Verify API Key" },
-      ];
+      { href: "/dashboard", label: "Overview" },
+      { href: "/dashboard/keys", label: "API Keys" },
+      { href: "/dashboard/usage", label: "Usage & Logs" },
+      // { href: "/dashboard/account", label: "Account Settings" },
+      { href: "/dashboard/testApi", label: "Verify API Key" },
+    ];
 
   return (
     <>
-{/* Mobile toggle */}
-<button
-  className="md:hidden fixed top-[0.75rem] left-4 z-50 bg-black text-white p-2 rounded"
-  onClick={() => setOpen(!open)}
->
-  {open ? <X size={20} /> : <Menu size={20} />}
-</button>
+      {/* Mobile toggle */}
+      <button
+        className="md:hidden fixed top-[0.75rem] left-4 z-50 bg-black text-white p-2 rounded"
+        onClick={() => setOpen(!open)}
+      >
+        {open ? <X size={20} /> : <Menu size={20} />}
+      </button>
 
 
       {/* Mobile overlay */}
@@ -58,11 +59,10 @@ export default function DashboardSidebar({ isAdmin = false }) {
             <Link
               key={href}
               href={href}
-              className={`block px-4 py-2 rounded-md text-sm font-medium ${
-                pathname === href
+              className={`block px-4 py-2 rounded-md text-sm font-medium ${pathname === href
                   ? "bg-black text-white"
                   : "text-gray-700 hover:bg-gray-100"
-              }`}
+                }`}
             >
               {label}
             </Link>

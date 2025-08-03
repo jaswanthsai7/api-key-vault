@@ -46,11 +46,13 @@ namespace APIVault.API.Controllers.Auth
         {
             try
             {
-                var token = await _authService.LoginAsync(request);
+                LoginResponse result = await _authService.LoginAsync(request);
+
                 return Ok(new
                 {
                     Message = "Login successful",
-                    AccessToken = token
+                    AccessToken = result.AccessToken,
+                    Role = result.Role
                 });
             }
             catch (Exception ex)
@@ -58,5 +60,6 @@ namespace APIVault.API.Controllers.Auth
                 return Unauthorized(new { Error = ex.Message });
             }
         }
+
     }
 }
