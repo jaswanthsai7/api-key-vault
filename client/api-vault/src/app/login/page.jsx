@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import CryptoJS from "crypto-js";// adjust path if needed
 import { loginUser } from "../lib/authService";
 import { encryptPassword } from "../lib/encryptPassword";
+import { useAuth } from "@/context/AuthContext";
 
 
 export default function LoginPage() {
@@ -12,26 +13,29 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
   const router = useRouter();
+const { login } = useAuth();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const encryptedPassword = encryptPassword(password);
-      const token = await loginUser({
-        email,
-        password: encryptedPassword,
-      });
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  try {
+    const encryptedPassword = encryptPassword(password);
+    const token = await loginUser({
+      email,
+      password: encryptedPassword,
+    });
 
-      localStorage.setItem("token", token.accessToken);
-      router.push("/dashboard");
-    } catch (error) {
-      const msg =
-        error?.response?.data?.message ||
-        error?.message ||
-        "Login failed. Try again.";
-      setErrorMsg(msg);
-    }
-  };
+    localStorage.setItem("token", token.accessToken);
+    login(token.accessToken); // ⬅️ context
+    router.push("/dashboard");
+  } catch (error) {
+    const msg =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Login failed. Try again.";
+    setErrorMsg(msg);
+  }
+};
+
 
   return (
     <section className="min-h-screen flex items-center justify-center bg-accent px-4">

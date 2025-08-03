@@ -16,6 +16,7 @@ export default function ApiKeyManager() {
   const [scopes, setScopes] = useState([]);
   const [loadingKeys, setLoadingKeys] = useState(false);
   const [loadingScopes, setLoadingScopes] = useState(false);
+  const [copiedId, setCopiedId] = useState(null);
 
   const fetchKeys = async () => {
     setLoadingKeys(true);
@@ -50,6 +51,7 @@ export default function ApiKeyManager() {
   };
 
   const handleRevokeKey = async (id) => {
+    if (!confirm("Are you sure you want to revoke this API key?")) return;
     try {
       const success = await revokeApiKey(id);
       if (success) {
@@ -101,7 +103,7 @@ export default function ApiKeyManager() {
             <h2 className="text-lg font-medium text-gray-800">Your Keys</h2>
             <button
               onClick={handleGenerateKey}
-              className="bg-gray-900 text-white px-4 py-2 rounded hover:bg-gray-700 text-sm"
+              className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 text-sm"
             >
               Generate New Key
             </button>
@@ -116,14 +118,28 @@ export default function ApiKeyManager() {
               {apiKeys.map((key) => (
                 <div
                   key={key.id}
-                  className="border border-border rounded-lg p-4 bg-white shadow-sm"
+                  className="border border-border rounded-lg p-4 bg-white shadow-sm relative"
                 >
-                  <p className="font-mono text-sm truncate text-gray-800">
-                    {key.key.slice(0, 6)}...{key.key.slice(-6)}
-                  </p>
-                  <p className="text-sm text-gray-500">
+                  <div className="flex justify-between items-center">
+                    <p className="font-mono text-sm truncate text-gray-800">
+                      {key.key.slice(0, 6)}...{key.key.slice(-6)}
+                    </p>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(key.key);
+                        setCopiedId(key.id);
+                        setTimeout(() => setCopiedId(null), 2000);
+                      }}
+                      className="text-xs text-grey-600 hover:underline ml-2"
+                    >
+                      {copiedId === key.id ? "Copied!" : "Copy"}
+                    </button>
+                  </div>
+
+                  <p className="text-sm text-gray-500 mt-1">
                     Created {formatDistanceToNow(new Date(key.createdAt))} ago
                   </p>
+
                   <p
                     className={`text-sm font-medium mt-1 ${
                       key.isRevoked ? "text-red-600" : "text-green-600"

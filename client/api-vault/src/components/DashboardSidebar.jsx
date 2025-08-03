@@ -23,7 +23,8 @@ export default function DashboardSidebar({ isAdmin = false }) {
         { href: "/dashboard", label: "Overview" },
         { href: "/dashboard/keys", label: "API Keys" },
         { href: "/dashboard/usage", label: "Usage & Logs" },
-        { href: "/dashboard/account", label: "Account Settings" },
+        // { href: "/dashboard/account", label: "Account Settings" },
+        { href: "/dashboard/testApi", label: "Verify API Key" },
       ];
 
   return (
