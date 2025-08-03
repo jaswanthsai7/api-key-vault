@@ -1,10 +1,10 @@
 ﻿using APIVault.API.Data;
-using APIVault.API.Helpers;
+using APIVault.API.DTOs.ApiKey;
 using APIVault.API.Models;
 using APIVault.API.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
-namespace APIVault.API.Services
+namespace APIVault.API.Services.Implementations
 {
     public class ApiKeyService : IApiKeyService
     {
@@ -15,60 +15,83 @@ namespace APIVault.API.Services
             _context = context;
         }
 
-        public async Task<string> GenerateApiKeyAsync(Guid userId)
+        public async Task<ApiKeyResponseDto> GenerateApiKeyAsync(Guid userId)
         {
-            // 1. Get user with role and group info
             var user = await _context.Users
-                .Include(u => u.Role)
                 .Include(u => u.Group)
+                .ThenInclude(g => g.GroupApiScopes)
                 .FirstOrDefaultAsync(u => u.Id == userId);
 
             if (user == null)
-                throw new Exception("User not found.");
+                throw new Exception("User not found");
 
-            // 2. Get allowed API scopes via group
-            var allowedScopeIds = await _context.GroupApiScopes
-                .Where(gas => gas.GroupId == user.GroupId)
-                .Select(gas => gas.ApiScopeId)
-                .ToListAsync();
-
-            var allowedScopes = await _context.ApiScopes
-                .Where(s => allowedScopeIds.Contains(s.Id))
-                .ToListAsync();
-
-            if (!allowedScopes.Any())
-                throw new Exception("No API scopes assigned to this user’s group.");
-
-            // 3. Generate API key
-            string generatedKey = ApiKeyGenerator.Generate();
-
-            var newApiKey = new ApiKey
+            var newKey = new ApiKey
             {
-                Key = generatedKey,
+                Key = Guid.NewGuid().ToString("N"),
                 UserId = userId,
                 CreatedAt = DateTime.UtcNow,
-                ExpiresAt = DateTime.UtcNow.AddDays(30), // Optional: 30-day expiration
-                IsRevoked = false
+                ApiKeyScopes = user.Group.GroupApiScopes
+                    .Select(gas => new ApiKeyScope
+                    {
+                        ApiScopeId = gas.ApiScopeId
+                    }).ToList()
             };
 
-            _context.ApiKeys.Add(newApiKey);
+            _context.ApiKeys.Add(newKey);
             await _context.SaveChangesAsync();
 
-            // 4. Add mapping to allowed scopes
-            foreach (var scope in allowedScopes)
+            return new ApiKeyResponseDto
             {
-                var keyScope = new ApiKeyScope
+                Id = newKey.Id,
+                Key = newKey.Key,
+                CreatedAt = newKey.CreatedAt,
+                IsRevoked = newKey.IsRevoked
+            };
+        }
+
+        public async Task<List<ApiKeyResponseDto>> GetUserApiKeysAsync(Guid userId)
+        {
+            return await _context.ApiKeys
+                .Where(k => k.UserId == userId)
+                .Select(k => new ApiKeyResponseDto
                 {
-                    ApiKeyId = newApiKey.Id,
-                    ApiScopeId = scope.Id
-                };
+                    Id = k.Id,
+                    Key = k.Key,
+                    CreatedAt = k.CreatedAt,
+                    IsRevoked = k.IsRevoked
+                }).ToListAsync();
+        }
 
-                _context.ApiKeyScopes.Add(keyScope);
-            }
+        public async Task<bool> RevokeApiKeyAsync(Guid apiKeyId, Guid userId)
+        {
+            var key = await _context.ApiKeys
+                .FirstOrDefaultAsync(k => k.Id == apiKeyId && k.UserId == userId);
 
+            if (key == null) return false;
+
+            key.IsRevoked = true;
             await _context.SaveChangesAsync();
+            return true;
+        }
 
-            return generatedKey;
+        public async Task<List<ApiScopeDto>> GetUserApiScopesAsync(Guid userId)
+        {
+            var user = await _context.Users
+                .Include(u => u.Group)
+                .ThenInclude(g => g.GroupApiScopes)
+                .ThenInclude(gas => gas.ApiScope)
+                .FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null)
+                throw new Exception("User not found");
+
+            return user.Group.GroupApiScopes
+                .Select(gas => new ApiScopeDto
+                {
+                    Name = gas.ApiScope.Name,
+                    Route = gas.ApiScope.Route,
+                    Description = gas.ApiScope.Description
+                }).ToList();
         }
     }
 }

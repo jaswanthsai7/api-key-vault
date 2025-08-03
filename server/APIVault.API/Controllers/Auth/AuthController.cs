@@ -3,8 +3,9 @@ using APIVault.API.Models;
 using APIVault.API.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
-namespace APIVault.API.Controllers
+namespace APIVault.API.Controllers.Auth
 {
+
     [ApiController]
     [Route("api/[controller]")]
     public class AuthController : ControllerBase

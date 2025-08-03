@@ -3,13 +3,14 @@ using APIVault.API.Data;
 using APIVault.API.DTOs.User;
 using APIVault.API.Models;
 using APIVault.API.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Threading.Tasks;
 
 namespace APIVault.API.Controllers.Admin
 {
-
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class UserController : ControllerBase
@@ -61,7 +62,6 @@ namespace APIVault.API.Controllers.Admin
             var user = new User
             {
                 Email = dto.Email,
-                PasswordHash = dto.PasswordHash,
                 RoleId = dto.RoleId,
                 GroupId = dto.GroupId
             };

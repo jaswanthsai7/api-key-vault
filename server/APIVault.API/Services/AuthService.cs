@@ -29,45 +29,52 @@ namespace APIVault.API.Services
             if (user == null)
                 throw new Exception("Invalid email or password.");
 
-            // Decrypt the encrypted password received from frontend
+            // Decrypt password from frontend (AES or similar)
             string decryptedPassword = _encryptionHelper.Decrypt(request.Password);
 
-            // Verify decrypted password against stored hash
+            // Verify against hashed password in DB (BCrypt)
             bool isPasswordValid = BCrypt.Net.BCrypt.Verify(decryptedPassword, user.PasswordHash);
 
             if (!isPasswordValid)
                 throw new Exception("Invalid email or password.");
 
+            // Generate JWT if valid
             return _jwtHelper.GenerateAccessToken(user);
         }
 
 
+
         public async Task<User> RegisterAsync(RegisterRequest request)
         {
+            // Check if email already exists
             var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
             if (existingUser != null)
                 throw new Exception("User already exists with this email.");
 
-            // Decrypt password first
+            // Decrypt password (if required by your system)
             string decryptedPassword = _encryptionHelper.Decrypt(request.Password);
 
-            // Hash decrypted password
+            // Hash the decrypted password
             var hashedPassword = BCrypt.Net.BCrypt.HashPassword(decryptedPassword);
 
-            var role = await _context.Roles.FindAsync(request.RoleId);
-            var group = await _context.Groups.FindAsync(request.GroupId);
-            if (role == null || group == null)
-                throw new Exception("Invalid Role or Group ID.");
+            // ✅ Assign default Role and Group
+            var defaultRole = await _context.Roles.FirstOrDefaultAsync(r => r.Name == "Unassigned");
+            var defaultGroup = await _context.Groups.FirstOrDefaultAsync(g => g.Name == "Default");
 
+            if (defaultRole == null || defaultGroup == null)
+                throw new Exception("Default Role or Group not found. Please contact administrator.");
+
+            // Create new user with default RoleId and GroupId
             var newUser = new User
             {
                 Email = request.Email,
                 PasswordHash = hashedPassword,
-                RoleId = role.Id,
-                GroupId = group.Id,
+                RoleId = defaultRole.Id,
+                GroupId = defaultGroup.Id,
                 CreatedAt = DateTime.UtcNow
             };
 
+            // Save user
             _context.Users.Add(newUser);
             await _context.SaveChangesAsync();
 

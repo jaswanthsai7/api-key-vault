@@ -1,10 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using APIVault.API.Filters;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 namespace APIVault.API.Controllers.Dummy
 {
 
-
     [ApiController]
     [Route("api/weather")]
+    [ApiKeyAuthorize("/api/weather")]
     public class WeatherApiController : ControllerBase
     {
         [HttpGet("GetWeather")]

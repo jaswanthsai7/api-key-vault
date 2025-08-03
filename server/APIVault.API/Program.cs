@@ -1,57 +1,126 @@
-﻿using APIVault.API.Data;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using System.Text;
+using APIVault.API.Data;
 using APIVault.API.Helpers;
 using APIVault.API.Services;
 using APIVault.API.Services.Implementations;
 using APIVault.API.Services.Interfaces;
-using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-//  Configure Database Connection
+// Configure Database
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-//  Enable CORS
-builder.Services.AddCors();
+// Configure CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowLocalhost3000", policy =>
+    {
+        policy.WithOrigins("http://localhost:3000")
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
 
-//  Dependency Injection
+// Add Services (DI)
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IApiKeyService, ApiKeyService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IRoleService, RoleService>();
+builder.Services.AddScoped<IGroupService, GroupService>();
 builder.Services.AddScoped<EncryptionHelper>();
 builder.Services.AddScoped<JwtHelper>();
 
-//  Add Controllers
-builder.Services.AddControllers();
+// JWT Settings
+var jwtSettings = builder.Configuration.GetSection("Jwt");
+var jwtKey = Encoding.UTF8.GetBytes(jwtSettings["Key"]);
 
-//  Add Swagger/OpenAPI
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+// Add JWT Authentication
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.RequireHttpsMetadata = false;
+    options.SaveToken = true;
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtSettings["Issuer"],
+        ValidAudience = jwtSettings["Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(jwtKey)
+    };
+});
+
+// Add Controllers
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+    options.JsonSerializerOptions.WriteIndented = true;
+});
+
+// Add Swagger with JWT Authorization
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "APIVault API",
+        Version = "v1"
+    });
+
+    // Add JWT "Authorize" button
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "Bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Enter 'Bearer' followed by a space and then your JWT.\nExample: Bearer abc.def.ghi"
+    });
+
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Id = "Bearer",
+                    Type = ReferenceType.SecurityScheme
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
 
 var app = builder.Build();
 
-//  Enable CORS Globally
-app.UseCors(options =>
-    options.AllowAnyOrigin()
-           .AllowAnyMethod()
-           .AllowAnyHeader());
-
-//  Enable Swagger in all environments
+// Enable Swagger UI
 app.UseSwagger();
 app.UseSwaggerUI(options =>
 {
     options.SwaggerEndpoint("/swagger/v1/swagger.json", "APIVault API V1");
-    options.RoutePrefix = ""; // Swagger will open at http://localhost:5000/
+    options.RoutePrefix = ""; // Swagger at root
 });
 
-//  HTTPS Redirection
+// Enable Middleware
 app.UseHttpsRedirection();
-
-//  Authorization
+app.UseCors("AllowLocalhost3000");
+app.UseAuthentication(); // JWT Auth
+app.UseMiddleware<APIVault.API.Middlewares.ApiKeyMiddleware>();
 app.UseAuthorization();
 
-//  Map Controllers
 app.MapControllers();
 
-//  Run the App
 app.Run();

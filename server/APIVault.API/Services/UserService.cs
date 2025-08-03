@@ -24,6 +24,7 @@ namespace APIVault.API.Services.Implementations
         }
 
         public async Task<IEnumerable<User>> GetAllAsync()
+        
         {
             return await _context.Users
                 .Include(u => u.Role)

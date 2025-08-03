@@ -4,9 +4,11 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using APIVault.API.Models;
 using APIVault.API.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 
 namespace APIVault.API.Controllers.Admin
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class GroupController : ControllerBase
@@ -18,7 +20,7 @@ namespace APIVault.API.Controllers.Admin
             _groupService = groupService;
         }
 
-        [HttpGet]
+        [HttpGet("GetAllGroups")]
         public async Task<IActionResult> GetAll()
         {
             var groups = await _groupService.GetAllGroupsAsync();

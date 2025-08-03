@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using APIVault.API.Filters;
+using Microsoft.AspNetCore.Mvc;
 
 namespace APIVault.API.Controllers.Dummy
 {
     [ApiController]
     [Route("api/stock")]
+    [ApiKeyAuthorize("/api/stock")]
     public class StockApiController : ControllerBase
     {
         [HttpGet("GetStock")]
