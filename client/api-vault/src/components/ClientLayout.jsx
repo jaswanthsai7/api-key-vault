@@ -1,30 +1,32 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import DashboardSidebar from "./DashboardSidebar";
 
 export default function ClientLayout({ children }) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
-  const [checkedAuth, setCheckedAuth] = useState(false);
 
-  const noSidebarRoutes = ["/login", "/register","/"];
+  const noSidebarRoutes = ["/login", "/register", "/"];
   const publicRoutes = ["/", "/login", "/register"];
   const showSidebar = !noSidebarRoutes.includes(pathname);
   const isPublic = publicRoutes.includes(pathname);
 
   useEffect(() => {
+    if (loading) return; // Wait for auth loading to finish
+
     if (!isAuthenticated && !isPublic) {
       router.replace("/login");
-    } else {
-      setCheckedAuth(true);
+    } else if (isAuthenticated && ["/login", "/register"].includes(pathname)) {
+      router.replace("/dashboard");
     }
-  }, [isAuthenticated, pathname]);
+  }, [loading, isAuthenticated, pathname]);
 
-  if (!checkedAuth && !isPublic) {
+  // Show loading screen only while checking token
+  if (loading) {
     return (
       <div className="flex items-center justify-center h-screen text-sm text-gray-600">
         Checking authentication...

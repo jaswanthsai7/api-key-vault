@@ -29,13 +29,14 @@ export default function DashboardSidebar({ isAdmin = false }) {
 
   return (
     <>
-      {/* Mobile toggle */}
-      <button
-        className="md:hidden fixed top-4 left-4 z-50 bg-black text-white p-2 rounded"
-        onClick={() => setOpen(!open)}
-      >
-        {open ? <X size={20} /> : <Menu size={20} />}
-      </button>
+{/* Mobile toggle */}
+<button
+  className="md:hidden fixed top-[0.75rem] left-4 z-50 bg-black text-white p-2 rounded"
+  onClick={() => setOpen(!open)}
+>
+  {open ? <X size={20} /> : <Menu size={20} />}
+</button>
+
 
       {/* Mobile overlay */}
       {open && (

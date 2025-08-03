@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import axios from "axios";
-import { Trash2 } from "lucide-react"; // optional icon if using lucide-react
+import { Trash2 } from "lucide-react";
+import Loader from "@/components/Loader";
 
 export default function TestApiPage() {
   const [url, setUrl] = useState("");
@@ -11,6 +12,7 @@ export default function TestApiPage() {
   const [body, setBody] = useState("");
   const [response, setResponse] = useState(null);
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false); 
 
   const handleHeaderChange = (index, field, value) => {
     const updated = [...headers];
@@ -27,39 +29,46 @@ export default function TestApiPage() {
   };
 
   const sendRequest = async () => {
+    setLoading(true); 
+    setError(null);
+    setResponse(null);
+
     try {
-      setError(null);
+      const token = localStorage.getItem("token");
+      const addCustomToken = headers.reduce((acc, { key, value }) => {
+        if (key.trim()) acc[key] = value;
+        return acc;
+      }, {});
 
-      const token = localStorage.getItem("token"); // adjust key if needed
-      const addCustomToken=headers.reduce((acc, { key, value }) => {
-          if (key.trim()) acc[key] = value;
-          return acc;
-        }, {})
-
-        if(token){
-          addCustomToken["AuthID"]=token;
-        }
+      if (token) {
+        addCustomToken["AuthID"] = token;
+      }
 
       const config = {
         method,
         url,
-        headers: addCustomToken ,
+        headers: addCustomToken,
       };
 
-      if (["POST", "PUT", "PATCH"].includes(method.toUpperCase()) && body.trim()) {
+      if (
+        ["POST", "PUT", "PATCH"].includes(method.toUpperCase()) &&
+        body.trim()
+      ) {
         config.data = JSON.parse(body);
       }
 
       const res = await axios(config);
+
       setResponse({
         status: res.status,
         headers: res.headers,
         data: res.data,
       });
     } catch (err) {
-      setResponse(null);
       setError(err.response || err.message || "Unknown error");
     }
+
+    setLoading(false); 
   };
 
   return (
@@ -119,10 +128,6 @@ export default function TestApiPage() {
               >
                 Delete
               </button>
-              {/* Or use an icon:
-              <button onClick={() => deleteHeader(index)} className="text-red-500">
-                <Trash2 size={16} />
-              </button> */}
             </div>
           ))}
         </div>
@@ -142,29 +147,42 @@ export default function TestApiPage() {
 
         <button
           onClick={sendRequest}
+          disabled={loading}
           className="bg-black hover:bg-gray-900 text-white px-4 py-2 rounded text-sm font-semibold"
         >
-          Send Request
+          {loading ? "Sending..." : "Send Request"}
         </button>
       </div>
 
-      {/* Response Section */}
-      {response && (
+      {/* Loader */}
+      {loading && (
+        <div className="flex justify-center py-10">
+          <Loader className="w-6 h-6 text-gray-600" />
+        </div>
+      )}
+
+      {/*Response Section */}
+      {response && !loading && (
         <div className="mt-6 bg-gray-100 p-4 rounded-lg border text-sm">
           <h3 className="font-bold mb-2">Response</h3>
           <div>Status: {response.status}</div>
           <div className="mt-2">
             <h4 className="font-semibold">Headers:</h4>
-            <pre className="overflow-x-auto">{JSON.stringify(response.headers, null, 2)}</pre>
+            <pre className="overflow-x-auto">
+              {JSON.stringify(response.headers, null, 2)}
+            </pre>
           </div>
           <div className="mt-2">
             <h4 className="font-semibold">Body:</h4>
-            <pre className="overflow-x-auto">{JSON.stringify(response.data, null, 2)}</pre>
+            <pre className="overflow-x-auto">
+              {JSON.stringify(response.data, null, 2)}
+            </pre>
           </div>
         </div>
       )}
 
-      {error && (
+      {/* Error Section */}
+      {error && !loading && (
         <div className="mt-6 text-sm text-red-600 bg-red-50 p-4 rounded border border-red-200">
           <h3 className="font-bold">Error</h3>
           <pre>{JSON.stringify(error, null, 2)}</pre>

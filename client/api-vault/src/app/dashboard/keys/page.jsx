@@ -9,6 +9,7 @@ import {
   generateApiKey,
   revokeApiKey,
 } from "@/app/lib/apikeyservice";
+import Loader from "@/components/Loader";
 
 export default function ApiKeyManager() {
   const [activeTab, setActiveTab] = useState("keys");
@@ -110,7 +111,9 @@ export default function ApiKeyManager() {
           </div>
 
           {loadingKeys ? (
-            <p className="text-gray-500">Loading keys...</p>
+            <div className="flex justify-center py-10">
+              <Loader className="w-6 h-6 text-gray-600" />
+            </div>
           ) : apiKeys.length === 0 ? (
             <p className="text-gray-500">No keys found.</p>
           ) : (
@@ -130,7 +133,7 @@ export default function ApiKeyManager() {
                         setCopiedId(key.id);
                         setTimeout(() => setCopiedId(null), 2000);
                       }}
-                      className="text-xs text-grey-600 hover:underline ml-2"
+                      className="text-xs text-gray-600 hover:underline ml-2"
                     >
                       {copiedId === key.id ? "Copied!" : "Copy"}
                     </button>
@@ -167,7 +170,9 @@ export default function ApiKeyManager() {
       {activeTab === "scopes" && (
         <div className="grid md:grid-cols-2 gap-4">
           {loadingScopes ? (
-            <p className="text-gray-500">Loading scopes...</p>
+            <div className="flex justify-center py-10">
+              <Loader className="w-6 h-6 text-gray-600" />
+            </div>
           ) : scopes.length === 0 ? (
             <p className="text-gray-500">No API access configured.</p>
           ) : (
