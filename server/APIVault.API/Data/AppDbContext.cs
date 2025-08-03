@@ -15,6 +15,7 @@ namespace APIVault.API.Data
         public DbSet<ApiKey> ApiKeys { get; set; }
         public DbSet<ApiKeyScope> ApiKeyScopes { get; set; }
         public DbSet<GroupApiScope> GroupApiScopes { get; set; }
+        public DbSet<ApiAuditLog> ApiAuditLogs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -104,6 +105,13 @@ namespace APIVault.API.Data
                 .Property(g => g.Name)
                 .IsRequired()
                 .HasMaxLength(50);
+
+            modelBuilder.Entity<ApiAuditLog>()
+    .HasOne(log => log.User)
+    .WithMany()
+    .HasForeignKey(log => log.UserId)
+    .OnDelete(DeleteBehavior.Restrict);
+
         }
     }
 }
