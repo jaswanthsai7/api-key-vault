@@ -53,7 +53,7 @@ namespace APIVault.API.Services
             // Check if email already exists
             var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
             if (existingUser != null)
-                throw new Exception("User already exists with this email.");
+                throw new Exception("User already exists with this email. Please login");
 
             // Decrypt password (if required by your system)
             string decryptedPassword = _encryptionHelper.Decrypt(request.Password);
@@ -61,7 +61,7 @@ namespace APIVault.API.Services
             // Hash the decrypted password
             var hashedPassword = BCrypt.Net.BCrypt.HashPassword(decryptedPassword);
 
-            // ✅ Assign default Role and Group
+            // Assign default Role and Group
             var defaultRole = await _context.Roles.FirstOrDefaultAsync(r => r.Name == "Unassigned");
             var defaultGroup = await _context.Groups.FirstOrDefaultAsync(g => g.Name == "Default");
 
