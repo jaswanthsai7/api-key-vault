@@ -16,11 +16,13 @@ namespace APIVault.API.Helpers
             _config = config;
         }
 
+        // Generate Access Token with necessary claims
         public string GenerateAccessToken(User user)
         {
             var claims = new[]
             {
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim("userId", user.Id.ToString()),  
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()), // optional
                 new Claim(ClaimTypes.Email, user.Email),
                 new Claim(ClaimTypes.Role, user.Role?.Name ?? "")
             };
@@ -32,13 +34,14 @@ namespace APIVault.API.Helpers
                 issuer: _config["Jwt:Issuer"],
                 audience: _config["Jwt:Audience"],
                 claims: claims,
-                expires: DateTime.UtcNow.AddMinutes(60),
+                expires: DateTime.UtcNow.AddMinutes(60), // 1 hour expiry
                 signingCredentials: creds
             );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
+        // Generate secure refresh token (32 bytes)
         public string GenerateRefreshToken()
         {
             var randomNumber = new byte[32];
@@ -47,6 +50,7 @@ namespace APIVault.API.Helpers
             return Convert.ToBase64String(randomNumber);
         }
 
+        // Extract claims from an expired token (for refresh workflows)
         public ClaimsPrincipal GetPrincipalFromExpiredToken(string token)
         {
             var tokenValidationParameters = new TokenValidationParameters
@@ -57,13 +61,13 @@ namespace APIVault.API.Helpers
                 ValidAudience = _config["Jwt:Audience"],
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"])),
-                ValidateLifetime = false
+                ValidateLifetime = false // we want to extract even if expired
             };
 
             var tokenHandler = new JwtSecurityTokenHandler();
-            var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out SecurityToken securityToken);
+            var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out SecurityToken validatedToken);
 
-            if (securityToken is not JwtSecurityToken jwtSecurityToken ||
+            if (validatedToken is not JwtSecurityToken jwtSecurityToken ||
                 !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
             {
                 throw new SecurityTokenException("Invalid token");
