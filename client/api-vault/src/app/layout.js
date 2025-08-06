@@ -5,6 +5,15 @@ import Navbar from "@/components/Navbar";
 import ClientLayout from "@/components/ClientLayout";
 import "./globals.css";
 
+
+export const metadata = {
+  title: 'APIVault',
+  description: 'Secure API Key Management Platform',
+  icons: {
+    icon: '/window.svg', // or .png, .svg
+  },
+}
+
 export default function RootLayout({ children }) {
   
   return (
