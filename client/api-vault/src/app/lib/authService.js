@@ -9,3 +9,8 @@ export async function registerUser(userInfo) {
   const response = await api.post("/Auth/register", userInfo);
   return response.data;
 }
+
+export async function verifyUser() {
+  const response = await api.post("/Auth/Me");
+  return response.data;
+}

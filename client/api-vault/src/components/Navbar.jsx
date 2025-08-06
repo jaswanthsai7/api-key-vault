@@ -18,7 +18,7 @@ export default function Navbar() {
           alt="API Vault Logo"
           width={28}
           height={28}
-          priority={true}
+          priority={"true"}
         />
         <span className="text-lg font-semibold text-gray-800 hidden sm:inline">API Vault</span>
       </Link>

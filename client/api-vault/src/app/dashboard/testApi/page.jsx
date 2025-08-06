@@ -34,20 +34,16 @@ export default function TestApiPage() {
     setResponse(null);
 
     try {
-      const token = localStorage.getItem("token");
-      const addCustomToken = headers.reduce((acc, { key, value }) => {
+      const customHeaders = headers.reduce((acc, { key, value }) => {
         if (key.trim()) acc[key] = value;
         return acc;
       }, {});
 
-      if (token) {
-        addCustomToken["AuthID"] = token;
-      }
-
       const config = {
         method,
         url,
-        headers: addCustomToken,
+        headers: customHeaders,
+        withCredentials: true, // 👈 important for cookies
       };
 
       if (

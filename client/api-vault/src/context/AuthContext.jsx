@@ -1,47 +1,51 @@
 "use client";
 
+import api from "@/app/lib/api";
 import { createContext, useContext, useEffect, useState } from "react";
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [token, setToken] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [loading, setLoading] = useState(true); //  Prevent flickering
+  const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(null);
-  useEffect(() => {
-    const storedToken = localStorage.getItem("token");
-    const storedIsAdmin =  localStorage.getItem("isAdminRole");
-    if (storedToken) {
-      setToken(storedToken);
-      setToken(storedIsAdmin);
+
+  const checkAuth = async () => {
+    try {
+      const res = await api.verifyUser(); // secure /auth/me endpoint
+      const role = res.data.role?.toLowerCase();
+      setIsAdmin(role === "admin");
       setIsAuthenticated(true);
+    } catch (err) {
+      setIsAuthenticated(false);
+      setIsAdmin(false);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false); //  Auth check complete
+  };
+
+  useEffect(() => {
+    checkAuth();
   }, []);
 
-  const login = (token,isAdmin) => {
-    localStorage.setItem("token", token);
-    localStorage.setItem("isAdminRole", isAdmin);
-    console.log(isAdmin);
-    
-    setToken(token);
-    setIsAdmin(isAdmin)
+  const login = async (isAdminFlag) => {
     setIsAuthenticated(true);
+    setIsAdmin(isAdminFlag);
   };
 
-  const logout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("isAdminRole");
-    setToken(null);
-    setIsAdmin(false)
+  const logout = async () => {
+    try {
+      await api.post("/auth/logout");
+    } catch (err) {
+      console.error("Logout failed:", err);
+    }
     setIsAuthenticated(false);
+    setIsAdmin(false);
   };
-
 
   return (
     <AuthContext.Provider
-      value={{ token, isAuthenticated, login, logout, loading ,isAdmin}}
+      value={{ isAuthenticated, isAdmin, login, logout, loading }}
     >
       {children}
     </AuthContext.Provider>

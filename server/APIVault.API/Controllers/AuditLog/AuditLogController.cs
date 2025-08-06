@@ -26,15 +26,27 @@ namespace APIVault.API.Controllers.AuditLog
         [HttpGet("my")]
         public async Task<IActionResult> GetMyLogs()
         {
-            var userIdClaim = User.FindFirst("userId") ?? User.FindFirst(ClaimTypes.NameIdentifier);
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (userIdClaim == null)
                 return Unauthorized("User ID not found in token.");
 
             var userId = Guid.Parse(userIdClaim.Value);
-
             var logs = await _auditLogService.GetLogsForUserAsync(userId);
             return Ok(logs);
         }
+
+        [HttpGet("stats")]
+        public async Task<IActionResult> GetStats()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null)
+                return Unauthorized("User ID not found in token.");
+
+            var userId = Guid.Parse(userIdClaim.Value);
+            var stats = await _auditLogService.GetUserStatsAsync(userId);
+            return Ok(stats);
+        }
+
 
         // For admin to view all logs
         [HttpGet("all")]
@@ -43,19 +55,6 @@ namespace APIVault.API.Controllers.AuditLog
         {
             var logs = await _auditLogService.GetAllLogsAsync();
             return Ok(logs);
-        }
-
-        [HttpGet("stats")]
-        [Authorize]
-        public async Task<IActionResult> GetStats()
-        {
-            var userIdClaim = User.FindFirst("userId") ?? User.FindFirst(ClaimTypes.NameIdentifier);
-            if (userIdClaim == null)
-                return Unauthorized("User ID not found in token.");
-
-            var userId = Guid.Parse(userIdClaim.Value);
-            var stats = await _auditLogService.GetUserStatsAsync(userId);
-            return Ok(stats);
         }
 
 

@@ -20,21 +20,12 @@ export default function LoginPage() {
     e.preventDefault();
     try {
       const encryptedPassword = encryptPassword(password);
-      const token = await loginUser({
-        email,
-        password: encryptedPassword,
-      });
-      
-      localStorage.setItem("token", token.accessToken);
-      const isAdmin = token?.role?.toLowerCase() =="admin" ?  true : false;
-      login(token.accessToken,isAdmin); //  context
-      if (isAdmin) {
+      const response = await loginUser({ email, password: encryptedPassword });
 
-        router.push("/admin");
-      }else{
+      const isAdmin = response?.role?.toLowerCase() === "admin";
+      await login(isAdmin); // 🔁 updates context immediately
 
-        router.push("/dashboard");
-      }
+      router.replace(isAdmin ? "/admin" : "/dashboard");
     } catch (error) {
       const msg =
         error?.response?.data?.message ||
@@ -43,6 +34,8 @@ export default function LoginPage() {
       setErrorMsg(msg);
     }
   };
+
+
 
 
   return (

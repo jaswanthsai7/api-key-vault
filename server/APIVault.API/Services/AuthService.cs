@@ -20,7 +20,7 @@ namespace APIVault.API.Services
             _encryptionHelper = encryptionHelper;
         }
 
-        public async Task<LoginResponse> LoginAsync(LoginRequest request)
+        public async Task<(User user, string role, string token)> LoginAsync(LoginRequest request)
         {
             var user = await _context.Users
                 .Include(u => u.Role)
@@ -38,12 +38,9 @@ namespace APIVault.API.Services
             // Generate token
             string token = _jwtHelper.GenerateAccessToken(user);
 
-            return new LoginResponse
-            {
-                AccessToken = token,
-                Role = user.Role?.Name ?? "Unknown"
-            };
+            return (user, user.Role?.Name ?? "Unknown", token);
         }
+
 
 
 

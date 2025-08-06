@@ -20,9 +20,10 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowLocalhost3000", policy =>
     {
-        policy.WithOrigins("http://localhost:3000")
+        policy.WithOrigins("https://localhost:3000")
               .AllowAnyMethod()
-              .AllowAnyHeader();
+              .AllowAnyHeader()
+              .AllowCredentials();
     });
 });
 
@@ -61,7 +62,46 @@ builder.Services.AddAuthentication(options =>
         ValidAudience = jwtSettings["Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(jwtKey)
     };
+
+    // 👇 Add diagnostic logging
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            var token = context.Request.Cookies["access_token"];
+
+            if (!string.IsNullOrEmpty(token))
+            {
+                context.Token = token;
+
+                //  Log when token is successfully read
+                Console.WriteLine("JWT token found in cookie.");
+            }
+            else
+            {
+                // Log when token is missing
+                Console.WriteLine("No JWT token found in cookie.");
+            }
+
+            return Task.CompletedTask;
+        },
+
+        OnAuthenticationFailed = context =>
+        {
+            // 🔥 Log reason for failure
+            Console.WriteLine($"Authentication failed: {context.Exception.Message}");
+            return Task.CompletedTask;
+        },
+
+        OnTokenValidated = context =>
+        {
+            // ✅ Log token success (optional)
+            Console.WriteLine("Token successfully validated.");
+            return Task.CompletedTask;
+        }
+    };
 });
+
 
 // Add Controllers
 builder.Services.AddControllers().AddJsonOptions(options =>
