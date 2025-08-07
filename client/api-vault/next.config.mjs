@@ -1,9 +1,11 @@
+// next.config.mjs
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
   experimental: {
-    appDir: true // only if using /app
+    appDir: true
   }
 };
 
-module.exports = nextConfig;
+export default nextConfig;
