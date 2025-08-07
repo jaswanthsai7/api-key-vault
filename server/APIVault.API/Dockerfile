@@ -2,21 +2,17 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-# Copy csproj and restore
-COPY APIVault.API/APIVault.API.csproj ./APIVault.API/
-RUN dotnet restore ./APIVault.API/APIVault.API.csproj
+# Copy everything in the current directory
+COPY . .
 
-# Copy everything and build
-COPY . ./
-WORKDIR /src/APIVault.API
+# Restore and publish
+RUN dotnet restore ./APIVault.API.csproj
 RUN dotnet publish -c Release -o /app/publish
 
-# Stage 2: Run
+# Stage 2: Runtime
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
 COPY --from=build /app/publish .
 
-# Expose the default port
 EXPOSE 80
-
 ENTRYPOINT ["dotnet", "APIVault.API.dll"]
