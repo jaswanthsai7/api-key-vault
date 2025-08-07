@@ -17,7 +17,7 @@ namespace APIVault.API.Services
 
         public async Task<IEnumerable<Role>> GetAllRolesAsync()
         {
-            return await _context.Roles.ToListAsync();
+            return await _context.Roles.Where(r => r.Name.ToLower() != "admin").ToListAsync();
         }
 
         public async Task<Role> GetRoleByIdAsync(Guid id)

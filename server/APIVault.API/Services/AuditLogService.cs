@@ -24,7 +24,7 @@ namespace APIVault.API.Services.Implementations
         {
             var log = new ApiAuditLog
             {
-                ApiKey = apiKey,
+                ApiKey = apiKey ?? "N/A",
                 Endpoint = endpoint,
                 IsKeyActive = isKeyActive,
                 UserId = userId,

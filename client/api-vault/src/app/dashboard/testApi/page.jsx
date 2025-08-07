@@ -3,7 +3,7 @@
 import { useState } from "react";
 import axios from "axios";
 import { Trash2 } from "lucide-react";
-import PageLoader from "@/components/Loader";
+import TableShimmer from "@/components/TableShimmer";
 
 export default function TestApiPage() {
   const [url, setUrl] = useState("");
@@ -12,7 +12,7 @@ export default function TestApiPage() {
   const [body, setBody] = useState("");
   const [response, setResponse] = useState(null);
   const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(false); 
+  const [loading, setLoading] = useState(false);
 
   const handleHeaderChange = (index, field, value) => {
     const updated = [...headers];
@@ -29,7 +29,7 @@ export default function TestApiPage() {
   };
 
   const sendRequest = async () => {
-    setLoading(true); 
+    setLoading(true);
     setError(null);
     setResponse(null);
 
@@ -43,7 +43,7 @@ export default function TestApiPage() {
         method,
         url,
         headers: customHeaders,
-        withCredentials: true, // 👈 important for cookies
+        withCredentials: true,
       };
 
       if (
@@ -64,7 +64,7 @@ export default function TestApiPage() {
       setError(err.response || err.message || "Unknown error");
     }
 
-    setLoading(false); 
+    setLoading(false);
   };
 
   return (
@@ -72,6 +72,7 @@ export default function TestApiPage() {
       <h1 className="text-2xl font-bold mb-6">Verify Your API Key</h1>
 
       <div className="space-y-4 bg-white p-6 shadow-md rounded-lg border">
+        {/* Method & URL */}
         <div className="flex gap-2">
           <select
             value={method}
@@ -91,6 +92,7 @@ export default function TestApiPage() {
           />
         </div>
 
+        {/* Headers */}
         <div>
           <div className="flex justify-between items-center mb-1">
             <h2 className="font-semibold text-sm">Headers</h2>
@@ -128,6 +130,7 @@ export default function TestApiPage() {
           ))}
         </div>
 
+        {/* Request Body */}
         {["POST", "PUT", "PATCH"].includes(method.toUpperCase()) && (
           <div>
             <h2 className="font-semibold text-sm mb-1">Request Body (JSON)</h2>
@@ -141,23 +144,31 @@ export default function TestApiPage() {
           </div>
         )}
 
+        {/* Send Button */}
         <button
           onClick={sendRequest}
           disabled={loading}
-          className="bg-black hover:bg-gray-900 text-white px-4 py-2 rounded text-sm font-semibold"
+          className="bg-black hover:bg-gray-900 text-white px-4 py-2 rounded text-sm font-semibold flex items-center gap-2"
         >
-          {loading ? "Sending..." : "Send Request"}
+          {loading ? (
+            <>
+              <span className="animate-pulse">Sending...</span>
+              <div className="w-4 h-4 bg-white/30 rounded-full animate-ping" />
+            </>
+          ) : (
+            "Send Request"
+          )}
         </button>
       </div>
 
-      {/* Loader */}
+      {/* Shimmer when loading response */}
       {loading && (
-        <div className="flex justify-center py-10">
-          <PageLoader className="w-6 h-6 text-gray-600" />
+        <div className="mt-6">
+          <TableShimmer rows={2} columns={1} columnWidth="w-full" height="h-40" />
         </div>
       )}
 
-      {/*Response Section */}
+      {/* Response Section */}
       {response && !loading && (
         <div className="mt-6 bg-gray-100 p-4 rounded-lg border text-sm">
           <h3 className="font-bold mb-2">Response</h3>

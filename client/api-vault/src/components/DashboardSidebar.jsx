@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { adminRoutes, dashboardRoutes } from "@/app/constants/routesData";
@@ -10,9 +10,15 @@ import { adminRoutes, dashboardRoutes } from "@/app/constants/routesData";
 export default function DashboardSidebar() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [selectedPath, setSelectedPath] = useState(pathname);
   const { isAdmin } = useAuth();
 
   const navItems = isAdmin ? adminRoutes : dashboardRoutes;
+
+  // Sync actual pathname after route change
+  useEffect(() => {
+    setSelectedPath(pathname);
+  }, [pathname]);
 
   return (
     <>
@@ -40,21 +46,34 @@ export default function DashboardSidebar() {
           md:translate-x-0 md:block`}
       >
         <div className="p-4 space-y-2">
-          {navItems.map(({ href, label }) => (
-            <Link
-              key={href}
-              href={href}
-              prefetch={true}
-              onClick={() => setOpen(false)}
-              className={`block px-4 py-2 rounded-md text-sm font-medium ${
-                pathname.startsWith(href)
-                  ? "bg-black text-white"
-                  : "text-gray-700 hover:bg-gray-100"
-              }`}
-            >
-              {label}
-            </Link>
-          ))}
+          {navItems.map(({ href, label }) => {
+            const isExactMatch = selectedPath === href;
+            const isChildRoute =
+              selectedPath.startsWith(href + "/") &&
+              href !== "/dashboard" &&
+              href !== "/admin";
+
+            const isActive = isExactMatch || isChildRoute;
+
+            return (
+              <Link
+                key={href}
+                href={href}
+                prefetch={true}
+                onClick={() => {
+                  setOpen(false);
+                  setSelectedPath(href); // optimistic update
+                }}
+                className={`block px-4 py-2 rounded-md text-sm font-medium ${
+                  isActive
+                    ? "bg-black text-white"
+                    : "text-gray-700 hover:bg-gray-100"
+                }`}
+              >
+                {label}
+              </Link>
+            );
+          })}
         </div>
       </aside>
     </>

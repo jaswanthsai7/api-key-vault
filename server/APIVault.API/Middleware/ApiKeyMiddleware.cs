@@ -18,7 +18,9 @@ namespace APIVault.API.Middlewares
             "/api/User",
             "/api/Admin",
             "/api/ApiKey",
-            "/api/AuditLog"
+            "/api/AuditLog",
+            "/api/Group",
+            "/api/Role"
         };
 
         public ApiKeyMiddleware(RequestDelegate next)
@@ -82,11 +84,11 @@ namespace APIVault.API.Middlewares
                     return;
                 }
 
-                if (context.Request.Headers.TryGetValue("AuthId", out var jwtTokenHeader))
+                // NEW: Extract JWT from cookie instead of header
+                var tokenStr = context.Request.Cookies["access_token"];
+                if (!string.IsNullOrEmpty(tokenStr))
                 {
-                    var tokenStr = jwtTokenHeader.ToString();
                     var handler = new JwtSecurityTokenHandler();
-
                     if (handler.CanReadToken(tokenStr))
                     {
                         var jwtToken = handler.ReadJwtToken(tokenStr);
@@ -101,9 +103,9 @@ namespace APIVault.API.Middlewares
                 }
                 else
                 {
+                    // fallback to keyEntity owner
                     userId = keyEntity.UserId;
                 }
-
 
                 // Attach useful info to context
                 isValidKey = true;
@@ -125,6 +127,7 @@ namespace APIVault.API.Middlewares
                 await context.Response.WriteAsync("Something went wrong in API middleware.");
             }
         }
+
 
     }
 }

@@ -63,7 +63,7 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(jwtKey)
     };
 
-    // 👇 Add diagnostic logging
+    //  Add diagnostic logging
     options.Events = new JwtBearerEvents
     {
         OnMessageReceived = context =>
@@ -88,14 +88,14 @@ builder.Services.AddAuthentication(options =>
 
         OnAuthenticationFailed = context =>
         {
-            // 🔥 Log reason for failure
+            //  Log reason for failure
             Console.WriteLine($"Authentication failed: {context.Exception.Message}");
             return Task.CompletedTask;
         },
 
         OnTokenValidated = context =>
         {
-            // ✅ Log token success (optional)
+            // Log token success (optional)
             Console.WriteLine("Token successfully validated.");
             return Task.CompletedTask;
         }

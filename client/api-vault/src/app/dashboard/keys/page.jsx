@@ -9,7 +9,9 @@ import {
   generateApiKey,
   revokeApiKey,
 } from "@/app/lib/apikeyservice";
-import PageLoader from "@/components/Loader";
+import MultiShimmer from "@/components/MultiShimmer";
+import TableShimmer from "@/components/TableShimmer";
+import ConfirmDialog from "@/components/ConfirmDialog";
 
 export default function ApiKeyManager() {
   const [activeTab, setActiveTab] = useState("keys");
@@ -18,6 +20,8 @@ export default function ApiKeyManager() {
   const [loadingKeys, setLoadingKeys] = useState(false);
   const [loadingScopes, setLoadingScopes] = useState(false);
   const [copiedId, setCopiedId] = useState(null);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [selectedKeyId, setSelectedKeyId] = useState(null);
 
   const fetchKeys = async () => {
     setLoadingKeys(true);
@@ -42,6 +46,7 @@ export default function ApiKeyManager() {
   };
 
   const handleGenerateKey = async () => {
+    setLoadingKeys(true);
     try {
       const newKey = await generateApiKey();
       toast.success("API Key created");
@@ -49,12 +54,18 @@ export default function ApiKeyManager() {
     } catch {
       toast.error("Failed to generate key");
     }
+    setLoadingKeys(false);
   };
 
-  const handleRevokeKey = async (id) => {
-    if (!confirm("Are you sure you want to revoke this API key?")) return;
+  const handleAskRevoke = (id) => {
+    setSelectedKeyId(id);
+    setShowConfirm(true);
+  };
+
+  const handleConfirmRevoke = async () => {
+    setShowConfirm(false);
     try {
-      const success = await revokeApiKey(id);
+      const success = await revokeApiKey(selectedKeyId);
       if (success) {
         toast.success("Key revoked");
         fetchKeys();
@@ -111,9 +122,13 @@ export default function ApiKeyManager() {
           </div>
 
           {loadingKeys ? (
-            <div className="flex justify-center py-10">
-              <PageLoader className="w-6 h-6 text-gray-600" />
-            </div>
+            <MultiShimmer
+              count={4}
+              type="card" // card | list | line
+              columns={4}
+              width="w-full"
+              height="h-10"
+            />
           ) : apiKeys.length === 0 ? (
             <p className="text-gray-500">No keys found.</p>
           ) : (
@@ -153,7 +168,7 @@ export default function ApiKeyManager() {
 
                   {!key.isRevoked && (
                     <button
-                      onClick={() => handleRevokeKey(key.id)}
+                      onClick={() => handleAskRevoke(key.id)}
                       className="mt-3 bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700"
                     >
                       Revoke
@@ -170,9 +185,12 @@ export default function ApiKeyManager() {
       {activeTab === "scopes" && (
         <div className="grid md:grid-cols-2 gap-4">
           {loadingScopes ? (
-            <div className="flex justify-center py-10">
-              <PageLoader className="w-6 h-6 text-gray-600" />
-            </div>
+            <TableShimmer
+              rows={2}
+              columns={3}
+              columnWidth="w-full"
+              height="h-10"
+            />
           ) : scopes.length === 0 ? (
             <p className="text-gray-500">No API access configured.</p>
           ) : (
@@ -193,6 +211,14 @@ export default function ApiKeyManager() {
           )}
         </div>
       )}
+
+      <ConfirmDialog
+        open={showConfirm}
+        title="Revoke API Key"
+        description="Are you sure you want to revoke this API key? This action cannot be undone."
+        onCancel={() => setShowConfirm(false)}
+        onConfirm={handleConfirmRevoke}
+      />
     </section>
   );
 }

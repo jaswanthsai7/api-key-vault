@@ -23,35 +23,42 @@ export default function ClientLayout({ children }) {
   useEffect(() => {
     if (loading) return;
 
-    // Unauthenticated trying to access protected
+    // Not authenticated & accessing protected route
     if (!isAuthenticated && isProtectedRoute) {
       router.replace("/login");
       return;
     }
 
-    // Authenticated user accessing public page
+    // Authenticated & trying to access public route (redirect to correct dashboard)
     if (isAuthenticated && isPublicRoute) {
-      router.replace("/dashboard");
+      router.replace(isAdmin ? "/admin" : "/dashboard");
       return;
     }
 
-    // Non-admin trying to access admin
+    // Non-admin trying to access /admin
     if (isAuthenticated && isAdminRoute && !isAdmin) {
       router.replace("/dashboard");
       return;
     }
 
-    // Unknown route — client-safe 404 redirect
+    // Admin trying to access /dashboard
+    if (isAuthenticated && isDashboardRoute && isAdmin) {
+      router.replace("/admin");
+      return;
+    }
+
+    // Invalid/unknown route
     if (
       isAuthenticated &&
       !isPublicRoute &&
-      !isDashboardRoute &&
-      !isAdminRoute
+      !isAdminRoute &&
+      !isDashboardRoute
     ) {
-      router.replace("/404"); // Make sure you have a /404 page
+      router.replace("/404"); // Make sure this route exists
     }
   }, [loading, isAuthenticated, isAdmin, pathname]);
 
+  // Show loader until check completes
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen text-sm text-gray-600">
@@ -60,11 +67,12 @@ export default function ClientLayout({ children }) {
     );
   }
 
-  // Return nothing until redirection is handled
+  // Prevent rendering layout if user is being redirected
   if (
     (!isAuthenticated && isProtectedRoute) ||
     (isAuthenticated && isPublicRoute) ||
-    (isAuthenticated && isAdminRoute && !isAdmin)
+    (isAuthenticated && isAdminRoute && !isAdmin) ||
+    (isAuthenticated && isDashboardRoute && isAdmin)
   ) {
     return null;
   }
