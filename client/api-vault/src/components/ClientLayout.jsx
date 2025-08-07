@@ -1,6 +1,7 @@
 "use client";
+
 import { useEffect } from "react";
-import { usePathname, useRouter, notFound } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import DashboardSidebar from "./DashboardSidebar";
 
@@ -13,36 +14,43 @@ export default function ClientLayout({ children }) {
   const adminPrefix = "/admin";
   const dashboardPrefix = "/dashboard";
 
-  const isPublic = publicRoutes.includes(pathname);
-  const showSidebar = !publicRoutes.includes(pathname);
+  const isPublicRoute = publicRoutes.includes(pathname);
+  const isAdminRoute = pathname.startsWith(adminPrefix);
+  const isDashboardRoute = pathname.startsWith(dashboardPrefix);
+  const isProtectedRoute = isAdminRoute || isDashboardRoute;
+  const showSidebar = isProtectedRoute;
 
   useEffect(() => {
     if (loading) return;
 
-    if (!isAuthenticated && !isPublic) {
+    // Unauthenticated trying to access protected
+    if (!isAuthenticated && isProtectedRoute) {
       router.replace("/login");
       return;
     }
 
-    if (isAuthenticated && isPublic) {
+    // Authenticated user accessing public page
+    if (isAuthenticated && isPublicRoute) {
       router.replace("/dashboard");
       return;
     }
 
-    if (isAuthenticated && pathname.startsWith(adminPrefix) && !isAdmin) {
+    // Non-admin trying to access admin
+    if (isAuthenticated && isAdminRoute && !isAdmin) {
       router.replace("/dashboard");
       return;
     }
 
-    const isKnownPath =
-      isPublic ||
-      pathname.startsWith(dashboardPrefix) ||
-      pathname.startsWith(adminPrefix);
-
-    if (isAuthenticated && !isKnownPath) {
-      notFound();
+    // Unknown route — client-safe 404 redirect
+    if (
+      isAuthenticated &&
+      !isPublicRoute &&
+      !isDashboardRoute &&
+      !isAdminRoute
+    ) {
+      router.replace("/404"); // Make sure you have a /404 page
     }
-  }, [loading, isAuthenticated, pathname, isAdmin]);
+  }, [loading, isAuthenticated, isAdmin, pathname]);
 
   if (loading) {
     return (
@@ -50,6 +58,15 @@ export default function ClientLayout({ children }) {
         Checking authentication...
       </div>
     );
+  }
+
+  // Return nothing until redirection is handled
+  if (
+    (!isAuthenticated && isProtectedRoute) ||
+    (isAuthenticated && isPublicRoute) ||
+    (isAuthenticated && isAdminRoute && !isAdmin)
+  ) {
+    return null;
   }
 
   return (

@@ -13,11 +13,9 @@ export const AuthProvider = ({ children }) => {
   const checkAuth = async () => {
     try {
       const res = await verifyUser(); // e.g., /auth/me
-      console.log(res);
-      
-      const role = res.data?.role?.toLowerCase();
+      const role = res?.role?.toLowerCase();
       setIsAuthenticated(true);
-      setIsAdmin(role === "admin");
+      setIsAdmin(role.toLowerCase() === "admin");
     } catch (err) {
       setIsAuthenticated(false);
       setIsAdmin(false);
@@ -33,6 +31,7 @@ export const AuthProvider = ({ children }) => {
   const login = async (isAdminFlag = false) => {
     setIsAuthenticated(true);
     setIsAdmin(isAdminFlag);
+    window.location.replace(isAdminFlag ? "/admin" : "/dashboard");
   };
 
   const logout = async () => {

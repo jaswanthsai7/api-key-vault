@@ -18,7 +18,6 @@ export default function LoginPage() {
 
   const router = useRouter();
   const { login } = useAuth();
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -26,9 +25,9 @@ export default function LoginPage() {
       const encryptedPassword = encryptPassword(password);
       const response = await loginUser({ email, password: encryptedPassword });
 
-      const isAdmin = response?.role?.toLowerCase() === "admin";
-      await login(isAdmin);
-      router.replace(isAdmin ? "/admin" : "/dashboard");
+      const isAdminFromApi = response?.role?.toLowerCase() === "admin";
+      await login(isAdminFromApi);
+      //router.replace(isAdminFromApi ? "/admin" : "/dashboard");
     } catch (error) {
       const msg =
         error?.response?.data?.message ||

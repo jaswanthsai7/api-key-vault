@@ -5,24 +5,14 @@ import Link from "next/link";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { adminRoutes, dashboardRoutes } from "@/app/constants/routesData";
 
 export default function DashboardSidebar() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const { isAdmin } = useAuth();
 
-  const navItems = isAdmin
-    ? [
-        { href: "/admin", label: "Admin Home" },
-        { href: "/admin/users", label: "Users" },
-        { href: "/admin/audit", label: "Audit Logs" },
-      ]
-    : [
-        { href: "/dashboard", label: "Overview" },
-        { href: "/dashboard/keys", label: "API Keys" },
-        { href: "/dashboard/usage", label: "Usage & Logs" },
-        { href: "/dashboard/testApi", label: "Verify API Key" },
-      ];
+  const navItems = isAdmin ? adminRoutes : dashboardRoutes;
 
   return (
     <>
@@ -55,9 +45,9 @@ export default function DashboardSidebar() {
               key={href}
               href={href}
               prefetch={true}
-              onClick={() => setOpen(false)} // closes sidebar immediately on mobile
+              onClick={() => setOpen(false)}
               className={`block px-4 py-2 rounded-md text-sm font-medium ${
-                pathname === href
+                pathname.startsWith(href)
                   ? "bg-black text-white"
                   : "text-gray-700 hover:bg-gray-100"
               }`}
