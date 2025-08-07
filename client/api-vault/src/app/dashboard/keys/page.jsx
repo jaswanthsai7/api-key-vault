@@ -9,7 +9,7 @@ import {
   generateApiKey,
   revokeApiKey,
 } from "@/app/lib/apikeyservice";
-import Loader from "@/components/Loader";
+import PageLoader from "@/components/Loader";
 
 export default function ApiKeyManager() {
   const [activeTab, setActiveTab] = useState("keys");
@@ -112,7 +112,7 @@ export default function ApiKeyManager() {
 
           {loadingKeys ? (
             <div className="flex justify-center py-10">
-              <Loader className="w-6 h-6 text-gray-600" />
+              <PageLoader className="w-6 h-6 text-gray-600" />
             </div>
           ) : apiKeys.length === 0 ? (
             <p className="text-gray-500">No keys found.</p>
@@ -171,7 +171,7 @@ export default function ApiKeyManager() {
         <div className="grid md:grid-cols-2 gap-4">
           {loadingScopes ? (
             <div className="flex justify-center py-10">
-              <Loader className="w-6 h-6 text-gray-600" />
+              <PageLoader className="w-6 h-6 text-gray-600" />
             </div>
           ) : scopes.length === 0 ? (
             <p className="text-gray-500">No API access configured.</p>

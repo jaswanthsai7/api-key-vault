@@ -5,8 +5,8 @@
 import { useEffect, useState } from "react";
 import DashboardHeader from "@/components/DashboardHeader";
 import StatCard from "@/components/StatCard";
-import { Loader } from "lucide-react";
 import { getDashboardStats } from "../lib/dashboardStatsService";
+import PageLoader from "@/components/Loader";
 
 export default function DashboardHome() {
   const [stats, setStats] = useState(null);
@@ -35,7 +35,7 @@ export default function DashboardHome() {
 
       {loading ? (
         <div className="flex justify-center py-10">
-          <Loader className="animate-spin w-6 h-6 text-gray-600" />
+          <PageLoader className="animate-spin w-6 h-6 text-gray-600" />
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mt-4">

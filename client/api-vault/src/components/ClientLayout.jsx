@@ -1,7 +1,6 @@
 "use client";
-
 import { useEffect } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, notFound } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import DashboardSidebar from "./DashboardSidebar";
 
@@ -10,21 +9,41 @@ export default function ClientLayout({ children }) {
   const router = useRouter();
   const pathname = usePathname();
 
-  const noSidebarRoutes = ["/login", "/register", "/"];
   const publicRoutes = ["/", "/login", "/register"];
-  const showSidebar = !noSidebarRoutes.includes(pathname);
+  const adminPrefix = "/admin";
+  const dashboardPrefix = "/dashboard";
+
   const isPublic = publicRoutes.includes(pathname);
+  const showSidebar = !publicRoutes.includes(pathname);
+
   useEffect(() => {
-    if (loading) return; // Wait for auth loading to finish
+    if (loading) return;
 
     if (!isAuthenticated && !isPublic) {
       router.replace("/login");
-    } else if (isAuthenticated && ["/login", "/register"].includes(pathname)) {
-      router.replace("/dashboard");
+      return;
     }
-  }, [loading, isAuthenticated, pathname]);
 
-  // Show loading screen only while checking token
+    if (isAuthenticated && isPublic) {
+      router.replace("/dashboard");
+      return;
+    }
+
+    if (isAuthenticated && pathname.startsWith(adminPrefix) && !isAdmin) {
+      router.replace("/dashboard");
+      return;
+    }
+
+    const isKnownPath =
+      isPublic ||
+      pathname.startsWith(dashboardPrefix) ||
+      pathname.startsWith(adminPrefix);
+
+    if (isAuthenticated && !isKnownPath) {
+      notFound();
+    }
+  }, [loading, isAuthenticated, pathname, isAdmin]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen text-sm text-gray-600">
@@ -32,11 +51,10 @@ export default function ClientLayout({ children }) {
       </div>
     );
   }
-console.log(isAdmin);
 
   return (
     <div className="pt-14">
-      {showSidebar && <DashboardSidebar/>}
+      {showSidebar && <DashboardSidebar />}
       <div className={showSidebar ? "md:ml-64 p-4" : "p-4"}>{children}</div>
     </div>
   );

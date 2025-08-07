@@ -5,7 +5,7 @@ import { format } from "date-fns";
 import DashboardHeader from "@/components/DashboardHeader";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { getUserAuditLogs } from "@/app/lib/usageService";
-import Loader from "@/components/Loader"; 
+import PageLoader from "@/components/Loader"; 
 
 function transformLogsToUsageStats(logs) {
   const usageMap = {};
@@ -50,7 +50,7 @@ export default function UsagePage() {
         <p className="font-medium text-gray-700 mb-2">API Requests (Past 7 Days)</p>
         {loading ? (
           <div className="flex justify-center py-6">
-            <Loader className="w-6 h-6 text-gray-500" />
+            <PageLoader className="w-6 h-6 text-gray-500" />
           </div>
         ) : usageStats.length === 0 ? (
           <div className="text-gray-500 text-sm">No usage data available.</div>
@@ -72,7 +72,7 @@ export default function UsagePage() {
 
         {loading ? (
           <div className="flex justify-center py-6">
-            <Loader className="w-6 h-6 text-gray-500" />
+            <PageLoader className="w-6 h-6 text-gray-500" />
           </div>
         ) : logs.length === 0 ? (
           <div className="text-gray-500 text-sm">No logs available.</div>

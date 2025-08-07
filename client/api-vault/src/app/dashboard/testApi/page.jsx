@@ -3,7 +3,7 @@
 import { useState } from "react";
 import axios from "axios";
 import { Trash2 } from "lucide-react";
-import Loader from "@/components/Loader";
+import PageLoader from "@/components/Loader";
 
 export default function TestApiPage() {
   const [url, setUrl] = useState("");
@@ -153,7 +153,7 @@ export default function TestApiPage() {
       {/* Loader */}
       {loading && (
         <div className="flex justify-center py-10">
-          <Loader className="w-6 h-6 text-gray-600" />
+          <PageLoader className="w-6 h-6 text-gray-600" />
         </div>
       )}
 

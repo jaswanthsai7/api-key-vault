@@ -1,6 +1,6 @@
 "use client";
 
-import api from "@/app/lib/api";
+import { logoutUser, verifyUser } from "@/app/lib/authService";
 import { createContext, useContext, useEffect, useState } from "react";
 
 const AuthContext = createContext();
@@ -8,14 +8,16 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false); // default to false
 
   const checkAuth = async () => {
     try {
-      const res = await api.verifyUser(); // secure /auth/me endpoint
-      const role = res.data.role?.toLowerCase();
-      setIsAdmin(role === "admin");
+      const res = await verifyUser(); // e.g., /auth/me
+      console.log(res);
+      
+      const role = res.data?.role?.toLowerCase();
       setIsAuthenticated(true);
+      setIsAdmin(role === "admin");
     } catch (err) {
       setIsAuthenticated(false);
       setIsAdmin(false);
@@ -25,22 +27,23 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    checkAuth();
+    checkAuth(); // once on mount
   }, []);
 
-  const login = async (isAdminFlag) => {
+  const login = async (isAdminFlag = false) => {
     setIsAuthenticated(true);
     setIsAdmin(isAdminFlag);
   };
 
   const logout = async () => {
     try {
-      await api.post("/auth/logout");
+      await logoutUser(); // API invalidates session or token
     } catch (err) {
       console.error("Logout failed:", err);
+    } finally {
+      setIsAuthenticated(false);
+      setIsAdmin(false);
     }
-    setIsAuthenticated(false);
-    setIsAdmin(false);
   };
 
   return (

@@ -158,3 +158,28 @@ body::-webkit-scrollbar {
   }
 }
 
+
+/* Hide scrollbar completely (for all browsers) */
+.hide-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Keyframe for upward scrolling animation */
+@keyframes marquee {
+  0% {
+    transform: translateY(0%);
+  }
+  100% {
+    transform: translateY(-50%);
+  }
+}
+
+/* Apply marquee animation */
+.animate-marquee {
+  animation: marquee 30s linear infinite;
+}
+

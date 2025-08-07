@@ -1,20 +1,16 @@
 "use client";
-
-import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-
+import { useAuth } from "@/context/AuthContext";
 
 export default function Navbar() {
-  const { isAuthenticated, logout } = useAuth();
- const pathname = usePathname();
-
+  const { isAuthenticated, isAdmin, logout } = useAuth();
 
   return (
-   <header className="fixed top-0 left-0 w-full h-14 z-50 bg-white/80 border-b backdrop-blur-md flex items-center px-4 md:px-6 md:pl-4 pl-14">
-   <Link href="/" className="flex items-center gap-2">
+    <nav className="fixed top-0 left-0 right-0 h-14 flex items-center justify-between px-6 bg-white shadow z-50 border-b">
+      
+      <Link href="/" className="flex items-center gap-2">
         <img
-          src="/window.svg" // 🔁 Replace with your logo file path (public/logo.svg, logo.png, etc.)
+          src="/window.svg" 
           alt="API Vault Logo"
           width={28}
           height={28}
@@ -23,33 +19,33 @@ export default function Navbar() {
         <span className="text-lg font-semibold text-gray-800 hidden sm:inline">API Vault</span>
       </Link>
 
-      <div className="ml-auto flex items-center gap-4">
-        {!isAuthenticated ? (
+      <div className="space-x-4">
+        {isAuthenticated ? (
           <>
-            <Link href="/login" className="text-sm text-gray-600 hover:text-gray-900">
-              Login
-            </Link>
             <Link
-              href="/register"
-              className="bg-accent hover:bg-accentHover px-4 py-1.5 rounded-md text-sm font-medium text-gray-900 border"
+              href={isAdmin ? "/admin" : "/dashboard"}
+              className="text-sm font-medium text-gray-700 hover:underline"
             >
-              Get Started
-            </Link>
-          </>
-        ) : (
-          <>
-            <Link href="/dashboard" className="text-sm text-gray-600 hover:text-gray-900">
-              Dashboard
+              {isAdmin ? "Admin Panel" : "Dashboard"}
             </Link>
             <button
               onClick={logout}
-              className="text-sm text-red-600 hover:text-red-800"
+              className="text-sm text-red-500 hover:underline"
             >
               Logout
             </button>
           </>
+        ) : (
+          <>
+            <Link href="/login" className="text-sm hover:underline">
+              Login
+            </Link>
+            <Link href="/register" className="text-sm hover:underline">
+              Register
+            </Link>
+          </>
         )}
       </div>
-    </header>
+    </nav>
   );
 }
