@@ -42,7 +42,7 @@ export default function Home() {
       <div className="max-w-7xl w-full grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
         {/* Text Content */}
         <div>
-          <h1 className="text-4xl sm:text-5xl md:text-6xl pt-12 md:pt-20 font-bold text-gray-900 leading-tight mb-6">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl pt-5 md:pt-10 font-bold text-gray-900 leading-tight mb-6">
             Secure. Monitor. Scale.
             <br />
             <span className="text-gray-700">API Vault for Developers</span>
