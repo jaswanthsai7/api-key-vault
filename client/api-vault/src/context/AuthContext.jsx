@@ -2,6 +2,7 @@
 
 import { logoutUser, verifyUser } from "@/app/lib/authService";
 import { createContext, useContext, useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 
 const AuthContext = createContext();
 
@@ -9,7 +10,7 @@ export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false); // default to false
-
+  const pathname = usePathname();
   const checkAuth = async () => {
     try {
       const res = await verifyUser(); // e.g., /auth/me
@@ -25,8 +26,15 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    checkAuth(); // once on mount
-  }, []);
+    // Only check auth for protected routes
+    const publicRoutes = ["/", "/login", "/register"];
+    if (!publicRoutes.includes(pathname)) {
+      checkAuth();
+    } else {
+      setLoading(false); // skip check
+    }
+  }, [pathname]);
+
 
   const login = async (isAdminFlag = false) => {
     setIsAuthenticated(true);
